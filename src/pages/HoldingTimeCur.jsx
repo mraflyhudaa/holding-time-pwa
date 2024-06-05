@@ -1,21 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import ProductForm from "../component/ProductForm";
+// import ProductForm from "../../ProductForm";
 
-interface MenuItem {
-  name: string;
-  qty: number;
-  uom: string;
-  kelompok: string;
-  lifeTime: string;
-}
-
-interface Product {
-  name: string;
-  expiryDate: Date;
-}
-
-const initialMenuItems: MenuItem[] = [
+const initialMenuItems = [
   { name: "Egg Roll", qty: 60, uom: "pcs", kelompok: "#1", lifeTime: "05:17" },
   {
     name: "Beef Teriyaki",
@@ -42,21 +29,20 @@ const initialMenuItems: MenuItem[] = [
   { name: "Ebi Furai", qty: 40, uom: "pcs", kelompok: "#2", lifeTime: "38:27" },
 ];
 
-const HoldingTimeCur: React.FC = () => {
-  const [menuItems, setMenuItems] = useState<MenuItem[]>(initialMenuItems);
-  const [products, setProducts] = useState<Product[]>([]);
+const HoldingTimeCur = () => {
+  const [menuItems, setMenuItems] = useState(initialMenuItems);
+  const [products, setProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const itemsPerPage: number = 5;
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   useEffect(() => {
     const storedProducts = localStorage.getItem("products");
     if (storedProducts) {
-      const parsedProducts: Product[] = JSON.parse(storedProducts);
-      parsedProducts.forEach(
-        (product: Product) =>
-          (product.expiryDate = new Date(product.expiryDate))
-      );
+      const parsedProducts = JSON.parse(storedProducts);
+      parsedProducts.forEach((product) => {
+        product.expiryDate = new Date(product.expiryDate);
+      });
       setProducts(parsedProducts);
     }
   }, []);
@@ -69,17 +55,17 @@ const HoldingTimeCur: React.FC = () => {
     localStorage.setItem("products", JSON.stringify(productsToStore));
   }, [products]);
 
-  const addProduct = (product: Product) => {
+  const addProduct = (product) => {
     const expiryDate = new Date();
     expiryDate.setMinutes(expiryDate.getMinutes() + 30);
     setProducts([...products, { ...product, expiryDate }]);
   };
 
-  const handleUpdate = (index: number) => {
+  const handleUpdate = (index) => {
     alert(`Update configuration for ${menuItems[index].name}`);
   };
 
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -92,9 +78,11 @@ const HoldingTimeCur: React.FC = () => {
           type="text"
           placeholder="SEARCH"
           className="input input-bordered w-full max-w-xs"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
         />
         <button className="btn btn-primary ml-2">Submit</button>
-        <ProductForm addProduct={addProduct} />
+        {/* <ProductForm addProduct={addProduct} /> */}
       </div>
       <table className="table table-zebra border w-full">
         <thead>
@@ -168,7 +156,7 @@ const HoldingTimeCur: React.FC = () => {
   );
 };
 
-const getLifeTimeColor = (lifeTime: string): string => {
+const getLifeTimeColor = (lifeTime) => {
   const minutes = parseInt(lifeTime.split(":")[0], 10);
   if (minutes < 10) return "text-red-500";
   if (minutes < 20) return "text-yellow-500";

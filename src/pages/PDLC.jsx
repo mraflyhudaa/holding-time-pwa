@@ -1,21 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
-interface TimeStatus {
-  time: string;
-  status: string;
-  min: number;
-  max: number;
-}
-
-interface MenuItem {
-  name: string;
-  unit: string;
-  qty: number;
-  times: TimeStatus[];
-}
-
-const generateFullDayTimes = (): TimeStatus[] => {
+const generateFullDayTimes = () => {
   const statuses = ["LOW", "MEDIUM", "HIGH", "SUPER"];
   return Array.from({ length: 24 }, (_, i) => ({
     time: `${String(i).padStart(2, "0")}:00`,
@@ -25,7 +11,7 @@ const generateFullDayTimes = (): TimeStatus[] => {
   }));
 };
 
-const initialMenuItems: MenuItem[] = [
+const initialMenuItems = [
   {
     name: "Beef Teriyaki 1KG",
     unit: "Porsi",
@@ -73,13 +59,13 @@ const initialMenuItems: MenuItem[] = [
 const itemsPerPage = 5;
 const timesPerPage = 3;
 
-const PDLC: React.FC = () => {
-  const [menuItems, setMenuItems] = useState<MenuItem[]>(initialMenuItems);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [timePage, setTimePage] = useState<number>(1);
+const PDLC = () => {
+  const [menuItems, setMenuItems] = useState(initialMenuItems);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [timePage, setTimePage] = useState(1);
 
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
-  const paginateTime = (pageNumber: number) => setTimePage(pageNumber);
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+  const paginateTime = (pageNumber) => setTimePage(pageNumber);
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -124,14 +110,14 @@ const PDLC: React.FC = () => {
               { length: timesPerPage },
               (_, i) => indexOfFirstTime + i
             ).map((timeIdx) => (
-              <>
+              <React.Fragment key={timeIdx}>
                 <th key={timeIdx + "min"} className="text-center">
                   {timeIdx < 24 ? "MIN" : ""}
                 </th>
                 <th key={timeIdx + "max"} className="text-center">
                   {timeIdx < 24 ? "MAX" : ""}
                 </th>
-              </>
+              </React.Fragment>
             ))}
           </tr>
         </thead>

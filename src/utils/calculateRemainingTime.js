@@ -1,9 +1,5 @@
-type CalcDate = {
-  expiryDate: Date;
-};
-
-export const calculateRemainingTime = ({ expiryDate }: CalcDate) => {
-  const now: Date = new Date();
+export const calculateRemainingTime = ({ expiryDate }) => {
+  const now = new Date();
   const difference = expiryDate.getTime() - now.getTime();
 
   if (difference <= 0) {

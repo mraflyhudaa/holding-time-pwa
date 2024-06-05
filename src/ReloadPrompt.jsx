@@ -1,5 +1,4 @@
 import "./ReloadPrompt.css";
-
 import { useRegisterSW } from "virtual:pwa-register/react";
 import { pwaInfo } from "virtual:pwa-info";
 
@@ -16,15 +15,13 @@ function ReloadPrompt() {
   } = useRegisterSW({
     onRegisteredSW(swUrl, r) {
       console.log(`Service Worker at: ${swUrl}`);
-      // @ts-expect-error just ignore
       if (reloadSW === "true") {
         r &&
           setInterval(() => {
             console.log("Checking for sw update");
             r.update();
-          }, 10000 /* 20s for testing purposes */);
+          }, 10000); // 10s for testing purposes
       } else {
-        // eslint-disable-next-line prefer-template
         console.log("SW Registered: " + r);
       }
     },

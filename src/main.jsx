@@ -5,7 +5,7 @@ import App from "./App";
 import HoldingTimeCur from "./pages/HoldingTimeCur";
 import PDLC from "./pages/PDLC";
 
-createRoot(document.getElementById("app")!).render(
+createRoot(document.getElementById("app")).render(
   <BrowserRouter>
     <Routes>
       <Route path="/" element={<App />}>

@@ -1,11 +1,10 @@
 import process from "node:process";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import type { ManifestOptions, VitePWAOptions } from "vite-plugin-pwa";
 import { VitePWA } from "vite-plugin-pwa";
 import replace from "@rollup/plugin-replace";
 
-const pwaOptions: Partial<VitePWAOptions> = {
+const pwaOptions = {
   mode: "development",
   base: "/",
   includeAssets: ["favicon.svg"],
@@ -47,11 +46,10 @@ const selfDestroying = process.env.SW_DESTROY === "true";
 
 if (process.env.SW === "true") {
   pwaOptions.srcDir = "src";
-  pwaOptions.filename = claims ? "claims-sw.ts" : "prompt-sw.ts";
+  pwaOptions.filename = claims ? "claims-sw.js" : "prompt-sw.js";
   pwaOptions.strategies = "injectManifest";
-  (pwaOptions.manifest as Partial<ManifestOptions>).name =
-    "PWA Inject Manifest";
-  (pwaOptions.manifest as Partial<ManifestOptions>).short_name = "PWA Inject";
+  pwaOptions.manifest.name = "PWA Inject Manifest";
+  pwaOptions.manifest.short_name = "PWA Inject";
   pwaOptions.injectManifest = {
     minify: false,
     enableWorkboxModulesLogs: true,
@@ -61,7 +59,6 @@ if (process.env.SW === "true") {
 if (claims) pwaOptions.registerType = "autoUpdate";
 
 if (reload) {
-  // @ts-expect-error just ignore
   replaceOptions.__RELOAD_SW__ = JSON.stringify("true"); // Add JSON.stringify to handle boolean
 }
 

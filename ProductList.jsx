@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { calculateRemainingTime } from "../utils/calculateRemainingTime";
+import { calculateRemainingTime } from "./src/utils/calculateRemainingTime";
 import ProductForm from "./ProductForm";
 
 interface Product {
