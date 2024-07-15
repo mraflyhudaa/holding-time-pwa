@@ -37,14 +37,15 @@ const HoldingTimeCur = () => {
   const itemsPerPage = 5;
 
   useEffect(() => {
-    const storedProducts = localStorage.getItem("products");
-    if (storedProducts) {
-      const parsedProducts = JSON.parse(storedProducts);
-      parsedProducts.forEach((product) => {
-        product.expiryDate = new Date(product.expiryDate);
-      });
-      setProducts(parsedProducts);
-    }
+    const fetchProducts = async () => {
+      try {
+        const response = await axios.get("http://localhost:8080/holding-time");
+        setProducts(response.data);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      }
+    };
+    fetchProducts();
   }, []);
 
   useEffect(() => {
@@ -55,15 +56,37 @@ const HoldingTimeCur = () => {
     localStorage.setItem("products", JSON.stringify(productsToStore));
   }, [products]);
 
-  const addProduct = (product) => {
-    const expiryDate = new Date();
-    expiryDate.setMinutes(expiryDate.getMinutes() + 30);
-    setProducts([...products, { ...product, expiryDate }]);
+  const addProduct = async (product) => {
+    try {
+      const response = await axios.post(
+        "http://localhost:8080/holding-time",
+        product
+      );
+      setProducts([...products, response.data]);
+    } catch (error) {
+      console.error("Error adding product:", error);
+    }
   };
 
   const handleUpdate = (index) => {
     alert(`Update configuration for ${menuItems[index].name}`);
   };
+
+  useEffect(() => {
+    const searchProducts = async () => {
+      try {
+        const response = await axios.get(
+          `http://localhost:8080/holding-time?search=${searchTerm}`
+        );
+        setProducts(response.data);
+      } catch (error) {
+        console.error("Error searching products:", error);
+      }
+    };
+    if (searchTerm) {
+      searchProducts();
+    }
+  }, [searchTerm]);
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
@@ -73,19 +96,19 @@ const HoldingTimeCur = () => {
 
   return (
     <div className="p-4">
-      <div className="flex justify-between mb-4">
+      <div className="flex mb-4">
         <input
           type="text"
           placeholder="SEARCH"
-          className="input input-bordered w-full max-w-xs"
+          className="w-full max-w-xs input input-bordered"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        <button className="btn btn-primary ml-2">Submit</button>
+        <button className="ml-2 btn btn-primary">Submit</button>
         {/* <ProductForm addProduct={addProduct} /> */}
       </div>
-      <table className="table table-zebra border w-full">
-        <thead>
+      <table className="table w-full text-lg border table-zebra">
+        <thead className="text-lg">
           <tr>
             <th>Item komposisi/ Menu</th>
             <th>Qty</th>
@@ -117,37 +140,42 @@ const HoldingTimeCur = () => {
           ))}
         </tbody>
       </table>
-      <div className="btn-group mt-4 space-x-2">
-        <button className="btn btn-outline" onClick={() => paginate(1)}>
-          &lt;&lt; First
-        </button>
-        <button
-          className="btn btn-outline"
-          onClick={() => paginate(currentPage - 1)}
-          disabled={currentPage === 1}
-        >
-          &lt; Prev
-        </button>
-        <button
-          className="btn btn-outline"
-          onClick={() => paginate(currentPage + 1)}
-          disabled={indexOfLastItem >= menuItems.length}
-        >
-          Next &gt;
-        </button>
-        <button
-          className="btn btn-outline"
-          onClick={() => paginate(Math.ceil(menuItems.length / itemsPerPage))}
-          disabled={indexOfLastItem >= menuItems.length}
-        >
-          Last &gt;&gt;
-        </button>
+      <div className="flex mt-4">
+        <div className="grid grid-cols-4 join">
+          <button
+            className="join-item btn btn-outline"
+            onClick={() => paginate(1)}
+          >
+            &lt;&lt; First
+          </button>
+          <button
+            className="join-item btn btn-outline"
+            onClick={() => paginate(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            &lt; Prev
+          </button>
+          <button
+            className="join-item btn btn-outline"
+            onClick={() => paginate(currentPage + 1)}
+            disabled={indexOfLastItem >= menuItems.length}
+          >
+            Next &gt;
+          </button>
+          <button
+            className="join-item btn btn-outline"
+            onClick={() => paginate(Math.ceil(menuItems.length / itemsPerPage))}
+            disabled={indexOfLastItem >= menuItems.length}
+          >
+            Last &gt;&gt;
+          </button>
+        </div>
       </div>
       <div className="flex justify-between mt-4">
         <Link className="btn btn-primary" to={"/"}>
           DISPLAY HOLDING TIME
         </Link>
-        <Link className="btn btn-success" to={"/pdlc"}>
+        <Link className="btn btn-info" to={"/pdlc"}>
           PDLC
         </Link>
         <button className="btn btn-warning">RMLC</button>

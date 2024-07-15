@@ -24,3 +24,12 @@ registerRoute(
 
 self.skipWaiting();
 clientsClaim();
+
+// Push event listener
+self.addEventListener("push", (event) => {
+  const options = {
+    body: event.data.text(),
+    icon: "/assets/icon.png", // Ensure this path is correct
+  };
+  event.waitUntil(self.registration.showNotification("Holding Time", options));
+});

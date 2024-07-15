@@ -80,12 +80,12 @@ const PDLC = () => {
         <input
           type="text"
           placeholder="SEARCH"
-          className="input input-bordered w-full max-w-xs"
+          className="w-full max-w-xs input input-bordered"
         />
-        <button className="btn btn-primary ml-2">Submit</button>
+        <button className="ml-2 btn btn-primary">Submit</button>
         <span className="ml-auto"></span>
       </div>
-      <table className="table table-zebra border w-full mb-4 text-lg">
+      <table className="table w-full mb-4 text-lg border table-zebra">
         <thead className="text-lg">
           <tr>
             <th>Item komposisi/ Menu</th>
@@ -140,7 +140,7 @@ const PDLC = () => {
         </tbody>
       </table>
       <div className="flex justify-between">
-        <div className="join grid grid-cols-4">
+        <div className="grid grid-cols-4 join">
           <button
             className="join-item btn btn-outline"
             onClick={() => paginate(1)}
@@ -169,7 +169,7 @@ const PDLC = () => {
             Last &gt;&gt;
           </button>
         </div>
-        <div className="join grid grid-cols-2">
+        <div className="grid grid-cols-2 join">
           <button
             className="join-item btn btn-outline"
             onClick={() => paginateTime(timePage - 1)}

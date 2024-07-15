@@ -12,6 +12,8 @@ const pwaOptions = {
     name: "Holding Time",
     short_name: "Holding Time",
     theme_color: "#ffffff",
+    id: "/",
+    display: "fullscreen",
     icons: [
       {
         src: "pwa-192x192.png", // <== don't add slash, for testing
@@ -48,8 +50,8 @@ if (process.env.SW === "true") {
   pwaOptions.srcDir = "src";
   pwaOptions.filename = claims ? "claims-sw.js" : "prompt-sw.js";
   pwaOptions.strategies = "injectManifest";
-  pwaOptions.manifest.name = "PWA Inject Manifest";
-  pwaOptions.manifest.short_name = "PWA Inject";
+  pwaOptions.manifest.name = "PWA Holding Time Manifest";
+  pwaOptions.manifest.short_name = "PWA Holding Time";
   pwaOptions.injectManifest = {
     minify: false,
     enableWorkboxModulesLogs: true,
@@ -59,7 +61,8 @@ if (process.env.SW === "true") {
 if (claims) pwaOptions.registerType = "autoUpdate";
 
 if (reload) {
-  replaceOptions.__RELOAD_SW__ = JSON.stringify("true"); // Add JSON.stringify to handle boolean
+  replaceOptions.__RELOAD_SW__ = JSON.stringify(true); // Add JSON.stringify to handle boolean
+  console.log(replaceOptions);
 }
 
 if (selfDestroying) pwaOptions.selfDestroying = selfDestroying;

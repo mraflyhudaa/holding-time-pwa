@@ -1,16 +1,16 @@
 const Navbar = () => {
   return (
     <>
-      <div className="navbar bg-base-100 p-2">
+      <div className="p-2 navbar bg-base-100">
         <div className="flex-1">
-          <a className="btn btn-ghost text-xl">Holding Time</a>
+          <a className="btn btn-ghost text">Holding Time</a>
         </div>
         <div className="flex-none gap-2">
           {/* <div className="form-control">
           <input
             type="text"
             placeholder="Search"
-            className="input input-sm input-bordered w-24 md:w-auto"
+            className="w-24 input input-sm input-bordered md:w-auto"
           />
         </div> */}
           <div className="dropdown dropdown-end">
@@ -19,8 +19,8 @@ const Navbar = () => {
               role="button"
               className="btn btn-ghost btn-circle avatar placeholder"
             >
-              <div className="bg-neutral text-neutral-content rounded-full w-16">
-                <span className="text-xl">AI</span>
+              <div className="w-6 rounded-full bg-neutral text-neutral-content">
+                <span className="text">AI</span>
               </div>
             </div>
             <ul
@@ -47,7 +47,7 @@ const Navbar = () => {
         <button>
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
+            className="w-5 h-5"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -64,7 +64,7 @@ const Navbar = () => {
         <button className="active">
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
+            className="w-5 h-5"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -81,7 +81,7 @@ const Navbar = () => {
         <button>
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
+            className="w-5 h-5"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
