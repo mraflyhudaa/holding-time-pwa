@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { Link } from "react-router-dom";
+import AddProductModal from "../component/AddProductModal";
 // import ProductForm from "../../ProductForm";
 
 const initialMenuItems = [
@@ -30,63 +32,75 @@ const initialMenuItems = [
 ];
 
 const HoldingTimeCur = () => {
-  const [menuItems, setMenuItems] = useState(initialMenuItems);
-  const [products, setProducts] = useState([]);
+  const [menuItems, setMenuItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const itemsPerPage = 5;
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await axios.get("http://localhost:8080/holding-time");
-        setProducts(response.data);
-      } catch (error) {
-        console.error("Error fetching products:", error);
-      }
-    };
-    fetchProducts();
+    fetchMenuItems();
   }, []);
 
-  useEffect(() => {
-    const productsToStore = products.map((product) => ({
-      ...product,
-      expiryDate: product.expiryDate.toISOString(),
-    }));
-    localStorage.setItem("products", JSON.stringify(productsToStore));
-  }, [products]);
+  const fetchMenuItems = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:8080/api/holding-time"
+      );
+      setMenuItems(response.data);
+    } catch (error) {
+      console.error("Error fetching menu items:", error);
+    }
+  };
 
   const addProduct = async (product) => {
     try {
-      const response = await axios.post(
-        "http://localhost:8080/holding-time",
-        product
-      );
-      setProducts([...products, response.data]);
+      await axios.post("http://localhost:8080/api/holding-time", {
+        food_item: product.food_item,
+        qty: product.qty,
+        uom: product.uom,
+        max_holding_time: product.max_holding_time,
+      });
+      fetchMenuItems(); // Refresh the list after adding
+      setIsModalOpen(false); // Close the modal after adding
     } catch (error) {
       console.error("Error adding product:", error);
     }
   };
 
-  const handleUpdate = (index) => {
-    alert(`Update configuration for ${menuItems[index].name}`);
+  const handleUpdate = async (id, updatedData) => {
+    try {
+      await axios.put(`http://localhost:8080/api/holding-time/${id}`, {
+        food_item: updatedData.name,
+        qty: updatedData.qty,
+        uom: updatedData.uom,
+        max_holding_time: updatedData.lifeTime,
+      });
+      fetchMenuItems(); // Refresh the list after updating
+    } catch (error) {
+      console.error("Error updating product:", error);
+    }
   };
 
-  useEffect(() => {
-    const searchProducts = async () => {
-      try {
-        const response = await axios.get(
-          `http://localhost:8080/holding-time?search=${searchTerm}`
-        );
-        setProducts(response.data);
-      } catch (error) {
-        console.error("Error searching products:", error);
-      }
-    };
-    if (searchTerm) {
-      searchProducts();
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`http://localhost:8080/api/holding-time/${id}`);
+      fetchMenuItems(); // Refresh the list after deleting
+    } catch (error) {
+      console.error("Error deleting product:", error);
     }
-  }, [searchTerm]);
+  };
+
+  const handleSearch = async () => {
+    try {
+      const response = await axios.get(
+        `http://localhost:8080/api/holding-time?search=${searchTerm}`
+      );
+      setMenuItems(response.data);
+    } catch (error) {
+      console.error("Error searching products:", error);
+    }
+  };
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
@@ -104,8 +118,15 @@ const HoldingTimeCur = () => {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        <button className="ml-2 btn btn-primary">Submit</button>
-        {/* <ProductForm addProduct={addProduct} /> */}
+        <button className="ml-2 btn btn-primary" onClick={handleSearch}>
+          Submit
+        </button>
+        <button
+          className="ml-2 btn btn-secondary"
+          onClick={() => setIsModalOpen(true)}
+        >
+          Add Product
+        </button>
       </div>
       <table className="table w-full text-lg border table-zebra">
         <thead className="text-lg">
@@ -119,8 +140,8 @@ const HoldingTimeCur = () => {
           </tr>
         </thead>
         <tbody>
-          {currentItems.map((item, index) => (
-            <tr key={index}>
+          {currentItems.map((item) => (
+            <tr key={item.id}>
               <td>{item.name}</td>
               <td>{item.qty}</td>
               <td>{item.uom}</td>
@@ -131,9 +152,15 @@ const HoldingTimeCur = () => {
               <td>
                 <button
                   className="btn btn-secondary"
-                  onClick={() => handleUpdate(index)}
+                  onClick={() => handleUpdate(item.id, item)}
                 >
                   Update
+                </button>
+                <button
+                  className="ml-2 btn btn-error"
+                  onClick={() => handleDelete(item.id)}
+                >
+                  Delete
                 </button>
               </td>
             </tr>
@@ -180,6 +207,11 @@ const HoldingTimeCur = () => {
         </Link>
         <button className="btn btn-warning">RMLC</button>
       </div>
+      <AddProductModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        addProduct={addProduct}
+      />
     </div>
   );
 };
