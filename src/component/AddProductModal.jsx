@@ -1,25 +1,53 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 const AddProductModal = ({ isOpen, onClose, addProduct }) => {
   const [productData, setProductData] = useState({
-    food_item: "",
+    name: "",
     qty: "",
     uom: "",
     max_holding_time: "",
   });
+  const [products, setProducts] = useState([]);
 
-  const handleChange = (e) => {
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const response = await axios.get("http://localhost:8080/api/products");
+      setProducts(response.data);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    }
+  };
+
+  const handleChange = async (e) => {
     const { name, value } = e.target;
     setProductData((prevData) => ({
       ...prevData,
       [name]: value,
     }));
+
+    if (name === "name" && value) {
+      const selectedProduct = products.find(
+        (product) => product.name === value
+      );
+      if (selectedProduct) {
+        setProductData((prevData) => ({
+          ...prevData,
+          uom: selectedProduct.uom,
+          max_holding_time: selectedProduct.max_holding_time,
+        }));
+      }
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     addProduct(productData);
-    setProductData({ food_item: "", qty: "", uom: "", max_holding_time: "" });
+    setProductData({ name: "", qty: "", uom: "", max_holding_time: "" });
   };
 
   if (!isOpen) return null;
@@ -44,19 +72,25 @@ const AddProductModal = ({ isOpen, onClose, addProduct }) => {
               <div className="mb-4">
                 <label
                   className="block mb-2 text-sm font-bold text-gray-700"
-                  htmlFor="food_item"
+                  htmlFor="name"
                 >
                   Food Item
                 </label>
-                <input
-                  type="text"
-                  id="food_item"
-                  name="food_item"
-                  value={productData.food_item}
+                <select
+                  id="name"
+                  name="name"
+                  value={productData.name}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 leading-tight text-gray-700 border rounded shadow appearance-none focus:outline-none focus:shadow-outline"
+                  className="w-full max-w-xs select select-bordered"
                   required
-                />
+                >
+                  <option value="">Select a product</option>
+                  {products.map((product) => (
+                    <option key={product.id} value={product.name}>
+                      {product.name}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="mb-4">
                 <label
@@ -71,7 +105,7 @@ const AddProductModal = ({ isOpen, onClose, addProduct }) => {
                   name="qty"
                   value={productData.qty}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 leading-tight text-gray-700 border rounded shadow appearance-none focus:outline-none focus:shadow-outline"
+                  className="w-full max-w-xs input input-bordered"
                   required
                 />
               </div>
@@ -88,8 +122,8 @@ const AddProductModal = ({ isOpen, onClose, addProduct }) => {
                   name="uom"
                   value={productData.uom}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 leading-tight text-gray-700 border rounded shadow appearance-none focus:outline-none focus:shadow-outline"
-                  required
+                  className="w-full max-w-xs input input-bordered"
+                  readOnly
                 />
               </div>
               <div className="mb-4">
@@ -105,23 +139,16 @@ const AddProductModal = ({ isOpen, onClose, addProduct }) => {
                   name="max_holding_time"
                   value={productData.max_holding_time}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 leading-tight text-gray-700 border rounded shadow appearance-none focus:outline-none focus:shadow-outline"
-                  required
+                  className="w-full max-w-xs input input-bordered"
+                  readOnly
                 />
               </div>
             </div>
             <div className="flex items-center justify-end p-6 border-t border-solid rounded-b border-blueGray-200">
-              <button
-                className="px-6 py-2 mb-1 mr-1 text-sm font-bold text-red-500 uppercase transition-all duration-150 ease-linear outline-none background-transparent focus:outline-none"
-                type="button"
-                onClick={onClose}
-              >
+              <button className="btn btn-error" type="button" onClick={onClose}>
                 Close
               </button>
-              <button
-                className="px-6 py-3 mb-1 mr-1 text-sm font-bold text-white uppercase transition-all duration-150 ease-linear rounded shadow outline-none bg-emerald-500 active:bg-emerald-600 hover:shadow-lg focus:outline-none"
-                type="submit"
-              >
+              <button className="ml-2 btn btn-primary" type="submit">
                 Add Product
               </button>
             </div>

@@ -56,7 +56,7 @@ const HoldingTimeCur = () => {
   const addProduct = async (product) => {
     try {
       await axios.post("http://localhost:8080/api/holding-time", {
-        food_item: product.food_item,
+        name: product.name,
         qty: product.qty,
         uom: product.uom,
         max_holding_time: product.max_holding_time,
@@ -71,7 +71,7 @@ const HoldingTimeCur = () => {
   const handleUpdate = async (id, updatedData) => {
     try {
       await axios.put(`http://localhost:8080/api/holding-time/${id}`, {
-        food_item: updatedData.name,
+        name: updatedData.name,
         qty: updatedData.qty,
         uom: updatedData.uom,
         max_holding_time: updatedData.lifeTime,
@@ -215,11 +215,12 @@ const HoldingTimeCur = () => {
     </div>
   );
 };
-
 const getLifeTimeColor = (lifeTime) => {
-  const minutes = parseInt(lifeTime.split(":")[0], 10);
-  if (minutes < 10) return "text-red-500";
-  if (minutes < 20) return "text-yellow-500";
+  const [hours, minutes, seconds] = lifeTime.split(":").map(Number);
+  const totalMinutes = hours * 60 + minutes + seconds / 60;
+
+  if (totalMinutes < 10) return "text-red-500";
+  if (totalMinutes < 20) return "text-yellow-500";
   return "text-green-500";
 };
 
