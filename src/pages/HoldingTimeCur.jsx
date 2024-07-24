@@ -2,44 +2,17 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import AddProductModal from "../component/AddProductModal";
-// import ProductForm from "../../ProductForm";
-
-const initialMenuItems = [
-  { name: "Egg Roll", qty: 60, uom: "pcs", kelompok: "#1", lifeTime: "05:17" },
-  {
-    name: "Beef Teriyaki",
-    qty: 20,
-    uom: "Porsi",
-    kelompok: "#1",
-    lifeTime: "14:32",
-  },
-  { name: "Ebi Furai", qty: 30, uom: "pcs", kelompok: "#1", lifeTime: "25:07" },
-  {
-    name: "Ramen Hokaido Misso",
-    qty: 2,
-    uom: "Porsi",
-    kelompok: "#1",
-    lifeTime: "29:55",
-  },
-  { name: "Ebi Furai", qty: 40, uom: "pcs", kelompok: "#2", lifeTime: "38:27" },
-  { name: "Ebi Furai", qty: 40, uom: "pcs", kelompok: "#2", lifeTime: "38:27" },
-  { name: "Ebi Furai", qty: 40, uom: "pcs", kelompok: "#2", lifeTime: "38:27" },
-  { name: "Ebi Furai", qty: 40, uom: "pcs", kelompok: "#2", lifeTime: "38:27" },
-  { name: "Ebi Furai", qty: 40, uom: "pcs", kelompok: "#2", lifeTime: "38:27" },
-  { name: "Ebi Furai", qty: 40, uom: "pcs", kelompok: "#2", lifeTime: "38:27" },
-  { name: "Ebi Furai", qty: 40, uom: "pcs", kelompok: "#2", lifeTime: "38:27" },
-  { name: "Ebi Furai", qty: 40, uom: "pcs", kelompok: "#2", lifeTime: "38:27" },
-];
 
 const HoldingTimeCur = () => {
   const [menuItems, setMenuItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const itemsPerPage = 5;
 
   useEffect(() => {
     fetchMenuItems();
+    const intervalId = setInterval(updateLifeTimes, 1000);
+    return () => clearInterval(intervalId);
   }, []);
 
   const fetchMenuItems = async () => {
@@ -47,22 +20,106 @@ const HoldingTimeCur = () => {
       const response = await axios.get(
         "http://localhost:8080/api/holding-time"
       );
-      setMenuItems(response.data);
+      const items = setupTimers(response.data);
+      setMenuItems(items);
     } catch (error) {
       console.error("Error fetching menu items:", error);
     }
   };
 
+  const setupTimers = (items) => {
+    return items.map((item) => {
+      const storedData = JSON.parse(localStorage.getItem(`timer_${item.id}`));
+      if (storedData) {
+        return {
+          ...item,
+          startTime: storedData.startTime,
+          initialLifeTime: storedData.initialLifeTime,
+        };
+      } else {
+        const newData = {
+          startTime: new Date().getTime(),
+          initialLifeTime: item.lifeTime,
+        };
+        localStorage.setItem(`timer_${item.id}`, JSON.stringify(newData));
+        return {
+          ...item,
+          ...newData,
+        };
+      }
+    });
+  };
+
+  const convertToMilliseconds = (time) => {
+    if (!time || typeof time !== "string") {
+      console.warn(`Invalid time format: ${time}`);
+      return 0;
+    }
+    const [hours, minutes, seconds] = time.split(":").map(Number);
+    return ((hours || 0) * 3600 + (minutes || 0) * 60 + (seconds || 0)) * 1000;
+  };
+
+  const updateLifeTimes = () => {
+    setMenuItems((prevItems) =>
+      prevItems.map((item) => {
+        const elapsedTime = new Date().getTime() - item.startTime;
+        const remainingTime = Math.max(
+          convertToMilliseconds(item.initialLifeTime) - elapsedTime,
+          0
+        );
+        const updatedLifeTime = formatTime(remainingTime);
+
+        localStorage.setItem(
+          `timer_${item.id}`,
+          JSON.stringify({
+            startTime: item.startTime,
+            initialLifeTime: item.initialLifeTime,
+          })
+        );
+
+        return {
+          ...item,
+          lifeTime: updatedLifeTime,
+        };
+      })
+    );
+  };
+
+  const formatTime = (milliseconds) => {
+    if (!milliseconds || milliseconds <= 0) return "00:00:00";
+    const totalSeconds = Math.floor(milliseconds / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    return `${hours.toString().padStart(2, "0")}:${minutes
+      .toString()
+      .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+  };
+
   const addProduct = async (product) => {
+    console.log("Adding product:", product);
     try {
-      await axios.post("http://localhost:8080/api/holding-time", {
-        name: product.name,
-        qty: product.qty,
-        uom: product.uom,
-        max_holding_time: product.max_holding_time,
-      });
-      fetchMenuItems();
-      setIsModalOpen(false);
+      const response = await axios.post(
+        "http://localhost:8080/api/holding-time",
+        {
+          name: product.name,
+          qty: product.qty,
+          uom: product.uom,
+          lifeTime: product.lifeTime || "00:00:00",
+        }
+      );
+
+      console.log("API response:", response.data);
+
+      const newItem = {
+        ...response.data.data,
+        startTime: new Date().getTime(),
+        initialLifeTime: response.data.data.lifeTime || "00:00:00",
+      };
+
+      console.log("New item to be added:", newItem);
+
+      setMenuItems((prevItems) => [...prevItems, newItem]);
     } catch (error) {
       console.error("Error adding product:", error);
     }
@@ -96,7 +153,11 @@ const HoldingTimeCur = () => {
       const response = await axios.get(
         `http://localhost:8080/api/holding-time?search=${searchTerm}`
       );
-      setMenuItems(response.data);
+      const updatedItems = response.data.map((item) => ({
+        ...item,
+        targetTime: new Date().getTime() + convertToMilliseconds(item.lifeTime),
+      }));
+      setMenuItems(updatedItems);
     } catch (error) {
       console.error("Error searching products:", error);
     }
@@ -123,7 +184,7 @@ const HoldingTimeCur = () => {
         </button>
         <button
           className="ml-2 btn btn-secondary"
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => document.getElementById("my_modal_1").showModal()}
         >
           Add Product
         </button>
@@ -150,14 +211,14 @@ const HoldingTimeCur = () => {
                 {item.lifeTime}
               </td>
               <td>
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => handleUpdate(item.id, item)}
+                <Link
+                  to={`/products/${item.id}`}
+                  className="mr-2 btn btn-primary"
                 >
                   Update
-                </button>
+                </Link>
                 <button
-                  className="ml-2 btn btn-error"
+                  className="btn btn-error"
                   onClick={() => handleDelete(item.id)}
                 >
                   Delete
@@ -207,11 +268,7 @@ const HoldingTimeCur = () => {
         </Link>
         <button className="btn btn-warning">RMLC</button>
       </div>
-      <AddProductModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        addProduct={addProduct}
-      />
+      <AddProductModal addProduct={addProduct} />
     </div>
   );
 };
