@@ -61,8 +61,8 @@ const HoldingTimeCur = () => {
         uom: product.uom,
         max_holding_time: product.max_holding_time,
       });
-      fetchMenuItems(); // Refresh the list after adding
-      setIsModalOpen(false); // Close the modal after adding
+      fetchMenuItems();
+      setIsModalOpen(false);
     } catch (error) {
       console.error("Error adding product:", error);
     }
@@ -76,7 +76,7 @@ const HoldingTimeCur = () => {
         uom: updatedData.uom,
         max_holding_time: updatedData.lifeTime,
       });
-      fetchMenuItems(); // Refresh the list after updating
+      fetchMenuItems();
     } catch (error) {
       console.error("Error updating product:", error);
     }
@@ -85,7 +85,7 @@ const HoldingTimeCur = () => {
   const handleDelete = async (id) => {
     try {
       await axios.delete(`http://localhost:8080/api/holding-time/${id}`);
-      fetchMenuItems(); // Refresh the list after deleting
+      fetchMenuItems();
     } catch (error) {
       console.error("Error deleting product:", error);
     }

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import AsyncSelect from "react-select/async";
 import axios from "axios";
 
 const AddProductModal = ({ isOpen, onClose, addProduct }) => {
@@ -9,6 +10,8 @@ const AddProductModal = ({ isOpen, onClose, addProduct }) => {
     max_holding_time: "",
   });
   const [products, setProducts] = useState([]);
+  const [options, setOptions] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState();
 
   useEffect(() => {
     fetchProducts();
@@ -18,21 +21,34 @@ const AddProductModal = ({ isOpen, onClose, addProduct }) => {
     try {
       const response = await axios.get("http://localhost:8080/api/products");
       setProducts(response.data);
+      const arr = response.data.map((product) => ({
+        value: product.name,
+        label: product.name,
+      }));
+      setOptions(arr);
     } catch (error) {
       console.error("Error fetching products:", error);
     }
   };
 
-  const handleChange = async (e) => {
-    const { name, value } = e.target;
+  const loadOptions = (inputValue) => {
+    return new Promise((resolve) => {
+      const filteredOptions = options.filter((option) =>
+        option.label.toLowerCase().includes(inputValue.toLowerCase())
+      );
+      resolve(filteredOptions);
+    });
+  };
+
+  const handleSelectChange = (selectedOption) => {
     setProductData((prevData) => ({
       ...prevData,
-      [name]: value,
+      name: selectedOption ? selectedOption.value : "",
     }));
 
-    if (name === "name" && value) {
+    if (selectedOption) {
       const selectedProduct = products.find(
-        (product) => product.name === value
+        (product) => product.name === selectedOption.value
       );
       if (selectedProduct) {
         setProductData((prevData) => ({
@@ -42,6 +58,14 @@ const AddProductModal = ({ isOpen, onClose, addProduct }) => {
         }));
       }
     }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setProductData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
   };
 
   const handleSubmit = (e) => {
@@ -76,21 +100,23 @@ const AddProductModal = ({ isOpen, onClose, addProduct }) => {
                 >
                   Food Item
                 </label>
-                <select
-                  id="name"
+                <AsyncSelect
                   name="name"
-                  value={productData.name}
-                  onChange={handleChange}
-                  className="w-full max-w-xs select select-bordered"
-                  required
-                >
-                  <option value="">Select a product</option>
-                  {products.map((product) => (
-                    <option key={product.id} value={product.name}>
-                      {product.name}
-                    </option>
-                  ))}
-                </select>
+                  isSearchable
+                  cacheOptions
+                  loadOptions={loadOptions}
+                  defaultOptions={options}
+                  onChange={handleSelectChange}
+                  value={
+                    productData.name
+                      ? { value: productData.name, label: productData.name }
+                      : null
+                  }
+                  className="w-full max-w-xs focus:input-primary"
+                  styles={{
+                    control: (styles) => ({ ...styles, height: "48px" }),
+                  }}
+                />
               </div>
               <div className="mb-4">
                 <label
@@ -104,8 +130,8 @@ const AddProductModal = ({ isOpen, onClose, addProduct }) => {
                   id="qty"
                   name="qty"
                   value={productData.qty}
-                  onChange={handleChange}
-                  className="w-full max-w-xs input input-bordered"
+                  onChange={handleInputChange}
+                  className="w-full max-w-xs input input-bordered focus:input-primary"
                   required
                 />
               </div>
@@ -121,8 +147,8 @@ const AddProductModal = ({ isOpen, onClose, addProduct }) => {
                   id="uom"
                   name="uom"
                   value={productData.uom}
-                  onChange={handleChange}
-                  className="w-full max-w-xs input input-bordered"
+                  onChange={handleSelectChange}
+                  className="w-full max-w-xs input input-bordered focus:input-primary"
                   readOnly
                 />
               </div>
@@ -138,8 +164,8 @@ const AddProductModal = ({ isOpen, onClose, addProduct }) => {
                   id="max_holding_time"
                   name="max_holding_time"
                   value={productData.max_holding_time}
-                  onChange={handleChange}
-                  className="w-full max-w-xs input input-bordered"
+                  onChange={handleSelectChange}
+                  className="w-full max-w-xs input input-bordered focus:input-primary"
                   readOnly
                 />
               </div>
