@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import AsyncSelect from "react-select/async";
 import axios from "axios";
 
-const AddProductModal = ({ addProduct }) => {
+const AddProductModal = ({ addProduct, isLoading }) => {
   const [productData, setProductData] = useState({
     name: "",
     qty: "",
@@ -176,8 +176,16 @@ const AddProductModal = ({ addProduct }) => {
             >
               Close
             </button>
-            <button className="ml-2 btn btn-primary" type="submit">
-              Add Product
+            <button
+              className="ml-2 btn btn-primary"
+              type="submit"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <span className="loading loading-spinner loading-lg"></span>
+              ) : (
+                "Add Product"
+              )}
             </button>
           </div>
         </form>
