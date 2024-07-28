@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import AddProductModal from "../component/AddProductModal";
+import { formatTime } from "../utils/formatTime";
+import { sortItemsByLifeTime } from "../utils/sortItemsByLifetime";
+import { convertToMilliseconds } from "../utils/convertToMilliseconds";
 
 const HoldingTimeCur = () => {
   const [menuItems, setMenuItems] = useState([]);
@@ -12,92 +15,56 @@ const HoldingTimeCur = () => {
   useEffect(() => {
     fetchMenuItems();
     const intervalId = setInterval(updateLifeTimes, 1000);
-    return () => clearInterval(intervalId);
+
+    return () => {
+      clearInterval(intervalId);
+    };
   }, []);
+
+  const calculateRemainingTime = (item, currentTime) => {
+    const elapsedTime = currentTime - item.startTime;
+    const initialLifeTimeMs = convertToMilliseconds(
+      item.initialLifeTime || item.lifeTime
+    );
+    const remainingTime = Math.max(initialLifeTimeMs - elapsedTime, 0);
+    return {
+      ...item,
+      remainingTimeMs: remainingTime,
+      lifeTime: formatTime(remainingTime),
+    };
+  };
 
   const fetchMenuItems = async () => {
     try {
       const response = await axios.get(
         "http://localhost:8080/api/holding-time"
       );
-      const items = setupTimers(response.data);
-      setMenuItems(items);
+      const currentTime = new Date().getTime();
+      const items = response.data.map((item) => ({
+        ...item,
+        initialLifeTime: item.lifeTime,
+        startTime: item.startTime || currentTime,
+      }));
+      const calculatedItems = items.map((item) =>
+        calculateRemainingTime(item, currentTime)
+      );
+      setMenuItems(sortItemsByLifeTime(calculatedItems));
     } catch (error) {
       console.error("Error fetching menu items:", error);
     }
   };
 
-  const setupTimers = (items) => {
-    return items.map((item) => {
-      const storedData = JSON.parse(localStorage.getItem(`timer_${item.id}`));
-      if (storedData) {
-        return {
-          ...item,
-          startTime: storedData.startTime,
-          initialLifeTime: storedData.initialLifeTime,
-        };
-      } else {
-        const newData = {
-          startTime: new Date().getTime(),
-          initialLifeTime: item.lifeTime,
-        };
-        localStorage.setItem(`timer_${item.id}`, JSON.stringify(newData));
-        return {
-          ...item,
-          ...newData,
-        };
-      }
+  const updateLifeTimes = () => {
+    const currentTime = new Date().getTime();
+    setMenuItems((prevItems) => {
+      const updatedItems = prevItems.map((item) =>
+        calculateRemainingTime(item, currentTime)
+      );
+      return sortItemsByLifeTime(updatedItems);
     });
   };
 
-  const convertToMilliseconds = (time) => {
-    if (!time || typeof time !== "string") {
-      console.warn(`Invalid time format: ${time}`);
-      return 0;
-    }
-    const [hours, minutes, seconds] = time.split(":").map(Number);
-    return ((hours || 0) * 3600 + (minutes || 0) * 60 + (seconds || 0)) * 1000;
-  };
-
-  const updateLifeTimes = () => {
-    setMenuItems((prevItems) =>
-      prevItems.map((item) => {
-        const elapsedTime = new Date().getTime() - item.startTime;
-        const remainingTime = Math.max(
-          convertToMilliseconds(item.initialLifeTime) - elapsedTime,
-          0
-        );
-        const updatedLifeTime = formatTime(remainingTime);
-
-        localStorage.setItem(
-          `timer_${item.id}`,
-          JSON.stringify({
-            startTime: item.startTime,
-            initialLifeTime: item.initialLifeTime,
-          })
-        );
-
-        return {
-          ...item,
-          lifeTime: updatedLifeTime,
-        };
-      })
-    );
-  };
-
-  const formatTime = (milliseconds) => {
-    if (!milliseconds || milliseconds <= 0) return "00:00:00";
-    const totalSeconds = Math.floor(milliseconds / 1000);
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-    return `${hours.toString().padStart(2, "0")}:${minutes
-      .toString()
-      .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
-  };
-
   const addProduct = async (product) => {
-    console.log("Adding product:", product);
     try {
       const response = await axios.post(
         "http://localhost:8080/api/holding-time",
@@ -109,17 +76,17 @@ const HoldingTimeCur = () => {
         }
       );
 
-      console.log("API response:", response.data);
+      const currentTime = new Date().getTime();
+      const newItem = calculateRemainingTime(
+        {
+          ...response.data.data,
+          initialLifeTime: response.data.data.lifeTime,
+          startTime: response.data.data.startTime || currentTime,
+        },
+        currentTime
+      );
 
-      const newItem = {
-        ...response.data.data,
-        startTime: new Date().getTime(),
-        initialLifeTime: response.data.data.lifeTime || "00:00:00",
-      };
-
-      console.log("New item to be added:", newItem);
-
-      setMenuItems((prevItems) => [...prevItems, newItem]);
+      setMenuItems((prevItems) => sortItemsByLifeTime([...prevItems, newItem]));
     } catch (error) {
       console.error("Error adding product:", error);
     }
@@ -131,7 +98,7 @@ const HoldingTimeCur = () => {
         name: updatedData.name,
         qty: updatedData.qty,
         uom: updatedData.uom,
-        max_holding_time: updatedData.lifeTime,
+        lifeTime: updatedData.lifeTime,
       });
       fetchMenuItems();
     } catch (error) {
@@ -153,11 +120,7 @@ const HoldingTimeCur = () => {
       const response = await axios.get(
         `http://localhost:8080/api/holding-time?search=${searchTerm}`
       );
-      const updatedItems = response.data.map((item) => ({
-        ...item,
-        targetTime: new Date().getTime() + convertToMilliseconds(item.lifeTime),
-      }));
-      setMenuItems(updatedItems);
+      setMenuItems(response.data);
     } catch (error) {
       console.error("Error searching products:", error);
     }
@@ -207,22 +170,26 @@ const HoldingTimeCur = () => {
               <td>{item.qty}</td>
               <td>{item.uom}</td>
               <td>{item.kelompok}</td>
-              <td className={getLifeTimeColor(item.lifeTime)}>
-                {item.lifeTime}
+              <td>
+                <p className={getLifeTimeColor(item.lifeTime)}>
+                  {item.lifeTime}
+                </p>
               </td>
               <td>
-                <Link
+                {/* <Link
                   to={`/products/${item.id}`}
                   className="mr-2 btn btn-primary"
                 >
                   Update
-                </Link>
-                <button
-                  className="btn btn-error"
-                  onClick={() => handleDelete(item.id)}
-                >
-                  Delete
-                </button>
+                </Link> */}
+                {item.lifeTime == "00:00:00" && (
+                  <button
+                    className="btn btn-error"
+                    onClick={() => handleDelete(item.id)}
+                  >
+                    Delete
+                  </button>
+                )}
               </td>
             </tr>
           ))}
@@ -276,9 +243,9 @@ const getLifeTimeColor = (lifeTime) => {
   const [hours, minutes, seconds] = lifeTime.split(":").map(Number);
   const totalMinutes = hours * 60 + minutes + seconds / 60;
 
-  if (totalMinutes < 10) return "text-red-500";
-  if (totalMinutes < 20) return "text-yellow-500";
-  return "text-green-500";
+  if (totalMinutes < 1) return "badge badge-lg badge-error";
+  if (totalMinutes < 20) return "badge badge-lg badge-warning";
+  return "badge badge-lg badge-primary";
 };
 
 export default HoldingTimeCur;
