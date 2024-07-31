@@ -6,6 +6,14 @@ import { formatTime } from "../utils/formatTime";
 import { sortItemsByLifeTime } from "../utils/sortItemsByLifetime";
 import { convertToMilliseconds } from "../utils/convertToMilliseconds";
 
+import {
+  createItemHoldingTime,
+  deleteItemHoldingTime,
+  getHoldingTime,
+  updateStatusHoldingTime,
+} from "../services/holdingTimeService";
+import { createWasteItem } from "../services/wasteService";
+
 const HoldingTimeCur = () => {
   const [menuItems, setMenuItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -34,13 +42,9 @@ const HoldingTimeCur = () => {
     async (search = "") => {
       setIsLoading(true);
       try {
-        const response = await axios.get(
-          `http://localhost:8080/api/holding-time${
-            search ? `?search=${search}` : ""
-          }`
-        );
+        const response = await getHoldingTime(search);
         const currentTime = new Date().getTime();
-        const items = response.data.map((item) => ({
+        const items = response.map((item) => ({
           ...item,
           initialLifeTime: item.lifeTime,
           startTime: item.startTime || currentTime,
@@ -60,17 +64,8 @@ const HoldingTimeCur = () => {
 
   const insertWasteItem = async (item) => {
     try {
-      const response = await axios.post(
-        "http://localhost:8080/api/waste-items",
-        {
-          name: item.name,
-          qty: item.qty,
-          uom: item.uom,
-          start_time: item.startTime,
-          end_time: new Date().getTime(),
-        }
-      );
-      console.log("Waste item inserted:", response.data);
+      const response = await createWasteItem(item);
+      console.log("Waste item inserted:", response);
     } catch (error) {
       console.error("Error inserting waste item:", error);
     }
@@ -87,10 +82,9 @@ const HoldingTimeCur = () => {
           item.status !== "expired"
         ) {
           console.log(item.id);
-          axios
-            .put(`http://localhost:8080/api/holding-time/expire/${item.id}`)
+          updateStatusHoldingTime(item)
             .then((response) => {
-              console.log("Marked as expired:", response.data);
+              console.log("Marked as expired:", response);
             })
             .catch((error) => {
               console.error("Error marking as expired:", error);
@@ -130,25 +124,17 @@ const HoldingTimeCur = () => {
     return () => clearInterval(blinkInterval);
   }, [menuItems]);
 
-  const addProduct = async (product) => {
+  const addProduct = async (item) => {
     setIsLoading(true);
     try {
-      const response = await axios.post(
-        "http://localhost:8080/api/holding-time",
-        {
-          name: product.name,
-          qty: product.qty,
-          uom: product.uom,
-          lifeTime: product.lifeTime || "00:00:00",
-        }
-      );
-
+      const response = await createItemHoldingTime(item);
+      console.log(response);
       const currentTime = new Date().getTime();
       const newItem = calculateRemainingTime(
         {
-          ...response.data.data,
-          initialLifeTime: response.data.data.lifeTime,
-          startTime: response.data.data.startTime || currentTime,
+          ...response.data,
+          initialLifeTime: response.data.lifeTime,
+          startTime: response.data.startTime || currentTime,
         },
         currentTime
       );
@@ -161,28 +147,12 @@ const HoldingTimeCur = () => {
     }
   };
 
-  const handleUpdate = async (id, updatedData) => {
-    setIsLoading(true);
-    try {
-      await axios.put(`http://localhost:8080/api/holding-time/${id}`, {
-        name: updatedData.name,
-        qty: updatedData.qty,
-        uom: updatedData.uom,
-        lifeTime: updatedData.lifeTime,
-      });
-      await fetchMenuItems();
-    } catch (error) {
-      console.error("Error updating product:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleDelete = async (id) => {
     setIsDeleting(true);
     try {
-      await axios.delete(`http://localhost:8080/api/holding-time/${id}`);
+      const response = await deleteItemHoldingTime(id);
       await fetchMenuItems();
+      console.log("Item deleted:", response);
     } catch (error) {
       console.error("Error deleting product:", error);
     } finally {
@@ -199,13 +169,13 @@ const HoldingTimeCur = () => {
     const totalMinutes = hours * 60 + minutes + seconds / 60;
 
     if (totalMinutes === 0) {
-      return `badge badge-lg badge-error ${
+      return `text-lg badge badge-lg badge-error ${
         blinkStates[itemId] ? "opacity-100" : "opacity-0"
       } transition-opacity duration-500`;
     }
-    if (totalMinutes < 1) return "badge badge-lg badge-error";
-    if (totalMinutes < 20) return "badge badge-lg badge-warning";
-    return "badge badge-lg badge-primary";
+    if (totalMinutes < 1) return "text-lg badge badge-lg badge-error";
+    if (totalMinutes < 20) return "text-lg badge badge-lg badge-warning";
+    return "text-lg badge badge-lg badge-primary";
   };
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
@@ -229,11 +199,7 @@ const HoldingTimeCur = () => {
           onClick={handleSearch}
           disabled={isLoading}
         >
-          {isLoading ? (
-            <span className="loading loading-spinner loading-md"></span>
-          ) : (
-            "Submit"
-          )}
+          Submit
         </button>
         <button
           className="ml-2 btn btn-secondary"
@@ -243,18 +209,18 @@ const HoldingTimeCur = () => {
         </button>
       </div>
 
-      <table className="table w-full text-lg border table-zebra">
-        <thead className="text-lg">
+      <table className="table w-full border table-zebra">
+        <thead className="text-lg bg-slate-300 text-black">
           <tr>
             <th>Item komposisi/ Menu</th>
             <th>Qty</th>
             <th>UOM</th>
             <th>Kelompok</th>
             <th>Life Time</th>
-            <th>Config</th>
+            <th>Tools</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="text-lg">
           {isLoading ? (
             <tr>
               <td colSpan="6" className="text-center py-4">
@@ -276,15 +242,11 @@ const HoldingTimeCur = () => {
                 <td>
                   {item.lifeTime == "00:00:00" && (
                     <button
-                      className="btn btn-error"
+                      className="btn btn-error text-lg"
                       onClick={() => handleDelete(item.id)}
                       disabled={isDeleting}
                     >
-                      {isDeleting ? (
-                        <span className="loading loading-spinner loading-md"></span>
-                      ) : (
-                        "Delete"
-                      )}
+                      Delete
                     </button>
                   )}
                 </td>
@@ -324,7 +286,8 @@ const HoldingTimeCur = () => {
           </button>
         </div>
       </div>
-      <div className="flex justify-between mt-4">
+      <AddProductModal addProduct={addProduct} isLoading={isLoading} />
+      {/* <div className="flex justify-between mt-4">
         <Link className="btn btn-primary" to={"/"}>
           DISPLAY HOLDING TIME
         </Link>
@@ -332,8 +295,8 @@ const HoldingTimeCur = () => {
           PDLC
         </Link>
         <button className="btn btn-warning">RMLC</button>
-      </div>
-      <AddProductModal addProduct={addProduct} isLoading={isLoading} />
+        <button className="btn btn-warning">ORDER MENU KHUSUS</button>
+      </div> */}
     </div>
   );
 };

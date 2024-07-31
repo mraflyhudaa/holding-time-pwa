@@ -9,8 +9,9 @@ function App() {
 
   return (
     <main className="App">
-      <Navbar />
-      <Outlet />
+      <Navbar>
+        <Outlet />
+      </Navbar>
       <ReloadPrompt />
     </main>
   );

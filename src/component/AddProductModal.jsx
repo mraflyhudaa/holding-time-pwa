@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import AsyncSelect from "react-select/async";
 import axios from "axios";
+import { getProducts } from "../services/productService";
 
 const AddProductModal = ({ addProduct, isLoading }) => {
   const [productData, setProductData] = useState({
@@ -19,9 +20,9 @@ const AddProductModal = ({ addProduct, isLoading }) => {
 
   const fetchProducts = async () => {
     try {
-      const response = await axios.get("http://localhost:8080/api/products");
-      setProducts(response.data);
-      const arr = response.data.map((product) => ({
+      const response = await getProducts();
+      setProducts(response);
+      const arr = response.map((product) => ({
         value: product.name,
         label: product.name,
       }));
@@ -125,12 +126,13 @@ const AddProductModal = ({ addProduct, isLoading }) => {
                 Quantity
               </label>
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
                 id="qty"
                 name="qty"
                 value={productData.qty}
                 onChange={handleInputChange}
-                className="w-full max-w-full input input-bordered focus:input-primary"
+                className="w-full max-w-full input input-bordered focus:input-secondary"
                 required
               />
             </div>

@@ -186,15 +186,6 @@ const PDLC = () => {
           </button>
         </div>
       </div>
-      <div className="flex justify-between mt-4">
-        <Link className="btn btn-primary" to={"/"}>
-          DISPLAY HOLDING TIME
-        </Link>
-        <Link className="btn btn-success" to={"/pdlc"}>
-          PDLC
-        </Link>
-        <button className="btn btn-warning">RMLC</button>
-      </div>
     </div>
   );
 };
