@@ -23,6 +23,7 @@ export const createItemHoldingTime = async (item) => {
   const api = await initializeAxios();
   try {
     const response = await api.post("holding-time", {
+      noitem: item.noitem,
       name: item.name,
       qty: item.qty,
       uom: item.uom,

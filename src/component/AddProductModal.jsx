@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from "react";
 import AsyncSelect from "react-select/async";
-import axios from "axios";
 import { getProducts } from "../services/productService";
 
 const AddProductModal = ({ addProduct, isLoading }) => {
   const [productData, setProductData] = useState({
+    noitem: "",
     name: "",
     qty: "",
     uom: "",
-    max_holding_time: "",
+    lifeTime: "",
   });
   const [products, setProducts] = useState([]);
   const [options, setOptions] = useState([]);
-  const [selectedProduct, setSelectedProduct] = useState();
 
   useEffect(() => {
     fetchProducts();
@@ -23,7 +22,7 @@ const AddProductModal = ({ addProduct, isLoading }) => {
       const response = await getProducts();
       setProducts(response);
       const arr = response.map((product) => ({
-        value: product.name,
+        value: product.noitem,
         label: product.name,
       }));
       setOptions(arr);
@@ -44,14 +43,14 @@ const AddProductModal = ({ addProduct, isLoading }) => {
   const handleSelectChange = (selectedOption) => {
     if (selectedOption) {
       const selectedProduct = products.find(
-        (product) => product.name === selectedOption.value
+        (product) => product.noitem === selectedOption.value
       );
       if (selectedProduct) {
         const lifeTime = selectedProduct.max_holding_time || "00:00:00";
-        console.log("Setting lifeTime:", lifeTime);
         setProductData((prevData) => ({
           ...prevData,
-          name: selectedOption.value,
+          noitem: selectedOption.value,
+          name: selectedProduct.name,
           uom: selectedProduct.uom,
           lifeTime: lifeTime,
         }));
@@ -59,6 +58,7 @@ const AddProductModal = ({ addProduct, isLoading }) => {
     } else {
       setProductData((prevData) => ({
         ...prevData,
+        noitem: "",
         name: "",
         uom: "",
         lifeTime: "00:00:00",
@@ -76,14 +76,20 @@ const AddProductModal = ({ addProduct, isLoading }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Submitting product data:", productData);
     addProduct({
+      noitem: productData.noitem,
       name: productData.name,
       qty: productData.qty,
       uom: productData.uom,
       lifeTime: productData.lifeTime,
     });
-    setProductData({ name: "", qty: "", uom: "", lifeTime: "00:00:00" });
+    setProductData({
+      noitem: "",
+      name: "",
+      qty: "",
+      uom: "",
+      lifeTime: "00:00:00",
+    });
     document.getElementById("my_modal_1").close();
   };
 
@@ -96,20 +102,20 @@ const AddProductModal = ({ addProduct, isLoading }) => {
             <div className="mb-4">
               <label
                 className="block mb-2 text-sm font-bold text-gray-700"
-                htmlFor="name"
+                htmlFor="noitem"
               >
-                Food Item
+                Item Number
               </label>
               <AsyncSelect
-                name="name"
+                name="noitem"
                 isSearchable
                 cacheOptions
                 loadOptions={loadOptions}
                 defaultOptions={options}
                 onChange={handleSelectChange}
                 value={
-                  productData.name
-                    ? { value: productData.name, label: productData.name }
+                  productData.noitem
+                    ? { value: productData.noitem, label: productData.name }
                     : null
                 }
                 className="w-full max-w-full focus:input-primary"
@@ -148,7 +154,7 @@ const AddProductModal = ({ addProduct, isLoading }) => {
                 id="uom"
                 name="uom"
                 value={productData.uom}
-                onChange={handleSelectChange}
+                onChange={handleInputChange}
                 className="w-full max-w-full input input-bordered focus:input-primary"
                 readOnly
               />

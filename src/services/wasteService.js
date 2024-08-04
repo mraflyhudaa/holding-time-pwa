@@ -4,6 +4,7 @@ export const createWasteItem = async (item) => {
   const api = await initializeAxios();
   try {
     const response = await api.post("waste-items", {
+      noitem: item.noitem,
       name: item.name,
       qty: item.qty,
       uom: item.uom,

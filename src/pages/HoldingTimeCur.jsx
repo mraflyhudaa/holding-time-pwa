@@ -41,7 +41,6 @@ const HoldingTimeCur = () => {
 
   const fetchMenuItems = useCallback(
     async (search = "") => {
-      setIsLoading(true);
       try {
         const response = await getHoldingTime(search);
         const currentTime = new Date().getTime();
@@ -56,8 +55,6 @@ const HoldingTimeCur = () => {
         setMenuItems(sortItemsByLifeTime(calculatedItems));
       } catch (error) {
         console.error("Error fetching menu items:", error);
-      } finally {
-        setIsLoading(false);
       }
     },
     [calculateRemainingTime]
@@ -105,8 +102,18 @@ const HoldingTimeCur = () => {
 
   useEffect(() => {
     fetchMenuItems();
-    const intervalId = setInterval(updateLifeTimes, 1000);
-    return () => clearInterval(intervalId);
+    const pollingInterval = setInterval(() => {
+      fetchMenuItems();
+    }, 5000); // Poll every 5 seconds
+
+    const timerInterval = setInterval(() => {
+      updateLifeTimes();
+    }, 1000); // Update the timer every second
+
+    return () => {
+      clearInterval(pollingInterval);
+      clearInterval(timerInterval);
+    };
   }, [fetchMenuItems, updateLifeTimes]);
 
   useEffect(() => {
@@ -152,21 +159,17 @@ const HoldingTimeCur = () => {
     [calculateRemainingTime]
   );
 
-  const handleDelete = useCallback(
-    async (id) => {
-      setIsDeleting(true);
-      try {
-        const response = await deleteItemHoldingTime(id);
-        await fetchMenuItems();
-        console.log("Item deleted:", response);
-      } catch (error) {
-        console.error("Error deleting product:", error);
-      } finally {
-        setIsDeleting(false);
-      }
-    },
-    [fetchMenuItems]
-  );
+  const handleDelete = useCallback(async (id) => {
+    setIsDeleting(true);
+    try {
+      await deleteItemHoldingTime(id);
+      setMenuItems((prevItems) => prevItems.filter((item) => item.id !== id));
+    } catch (error) {
+      console.error("Error deleting product:", error);
+    } finally {
+      setIsDeleting(false);
+    }
+  }, []);
 
   const handleSearch = useCallback(() => {
     debouncedFetchMenuItems(searchTerm);
@@ -237,13 +240,14 @@ const HoldingTimeCur = () => {
           </tr>
         </thead>
         <tbody className="text-lg">
-          {isLoading ? (
-            <tr>
-              <td colSpan="6" className="text-center py-4">
-                <span className="loading loading-spinner loading-lg"></span>
-              </td>
-            </tr>
-          ) : (
+          {
+            // isLoading ? (
+            //   <tr>
+            //     <td colSpan="6" className="text-center py-4">
+            //       <span className="loading loading-spinner loading-lg"></span>
+            //     </td>
+            //   </tr>
+            // ) : (
             currentItems.map((item) => (
               <tr key={item.id}>
                 <td>{item.name}</td>
@@ -268,7 +272,8 @@ const HoldingTimeCur = () => {
                 </td>
               </tr>
             ))
-          )}
+            // )
+          }
         </tbody>
       </table>
       <div className="flex mt-4">
