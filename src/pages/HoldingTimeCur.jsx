@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import { debounce } from "lodash";
 import AddProductModal from "../component/AddProductModal";
 import { formatTime } from "../utils/formatTime";
 import { sortItemsByLifeTime } from "../utils/sortItemsByLifetime";
@@ -23,7 +24,7 @@ const HoldingTimeCur = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const itemsPerPage = 5;
 
-  const processedItemIds = new Set();
+  const processedItemIds = useMemo(() => new Set(), []);
 
   const calculateRemainingTime = useCallback((item, currentTime) => {
     const elapsedTime = currentTime - item.startTime;
@@ -62,14 +63,19 @@ const HoldingTimeCur = () => {
     [calculateRemainingTime]
   );
 
-  const insertWasteItem = async (item) => {
+  const debouncedFetchMenuItems = useMemo(
+    () => debounce(fetchMenuItems, 300),
+    [fetchMenuItems]
+  );
+
+  const insertWasteItem = useCallback(async (item) => {
     try {
       const response = await createWasteItem(item);
       console.log("Waste item inserted:", response);
     } catch (error) {
       console.error("Error inserting waste item:", error);
     }
-  };
+  }, []);
 
   const updateLifeTimes = useCallback(() => {
     const currentTime = new Date().getTime();
@@ -81,7 +87,6 @@ const HoldingTimeCur = () => {
           !processedItemIds.has(item.id) &&
           item.status !== "expired"
         ) {
-          console.log(item.id);
           updateStatusHoldingTime(item)
             .then((response) => {
               console.log("Marked as expired:", response);
@@ -96,17 +101,13 @@ const HoldingTimeCur = () => {
       });
       return sortItemsByLifeTime(updatedItems);
     });
-  }, [calculateRemainingTime]);
+  }, [calculateRemainingTime, insertWasteItem, processedItemIds]);
 
   useEffect(() => {
     fetchMenuItems();
     const intervalId = setInterval(updateLifeTimes, 1000);
     return () => clearInterval(intervalId);
   }, [fetchMenuItems, updateLifeTimes]);
-
-  useEffect(() => {
-    processedItemIds.clear();
-  }, [menuItems]);
 
   useEffect(() => {
     const blinkInterval = setInterval(() => {
@@ -124,65 +125,80 @@ const HoldingTimeCur = () => {
     return () => clearInterval(blinkInterval);
   }, [menuItems]);
 
-  const addProduct = async (item) => {
-    setIsLoading(true);
-    try {
-      const response = await createItemHoldingTime(item);
-      console.log(response);
-      const currentTime = new Date().getTime();
-      const newItem = calculateRemainingTime(
-        {
-          ...response.data,
-          initialLifeTime: response.data.lifeTime,
-          startTime: response.data.startTime || currentTime,
-        },
-        currentTime
-      );
+  const addProduct = useCallback(
+    async (item) => {
+      setIsLoading(true);
+      try {
+        const response = await createItemHoldingTime(item);
+        const currentTime = new Date().getTime();
+        const newItem = calculateRemainingTime(
+          {
+            ...response.data,
+            initialLifeTime: response.data.lifeTime,
+            startTime: response.data.startTime || currentTime,
+          },
+          currentTime
+        );
 
-      setMenuItems((prevItems) => sortItemsByLifeTime([...prevItems, newItem]));
-    } catch (error) {
-      console.error("Error adding product:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        setMenuItems((prevItems) =>
+          sortItemsByLifeTime([...prevItems, newItem])
+        );
+      } catch (error) {
+        console.error("Error adding product:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [calculateRemainingTime]
+  );
 
-  const handleDelete = async (id) => {
-    setIsDeleting(true);
-    try {
-      const response = await deleteItemHoldingTime(id);
-      await fetchMenuItems();
-      console.log("Item deleted:", response);
-    } catch (error) {
-      console.error("Error deleting product:", error);
-    } finally {
-      setIsDeleting(false);
-    }
-  };
+  const handleDelete = useCallback(
+    async (id) => {
+      setIsDeleting(true);
+      try {
+        const response = await deleteItemHoldingTime(id);
+        await fetchMenuItems();
+        console.log("Item deleted:", response);
+      } catch (error) {
+        console.error("Error deleting product:", error);
+      } finally {
+        setIsDeleting(false);
+      }
+    },
+    [fetchMenuItems]
+  );
 
-  const handleSearch = async () => {
-    fetchMenuItems(searchTerm);
-  };
+  const handleSearch = useCallback(() => {
+    debouncedFetchMenuItems(searchTerm);
+  }, [debouncedFetchMenuItems, searchTerm]);
 
-  const getLifeTimeColor = (lifeTime, itemId) => {
-    const [hours, minutes, seconds] = lifeTime.split(":").map(Number);
-    const totalMinutes = hours * 60 + minutes + seconds / 60;
+  const getLifeTimeColor = useCallback(
+    (lifeTime, itemId) => {
+      const [hours, minutes, seconds] = lifeTime.split(":").map(Number);
+      const totalMinutes = hours * 60 + minutes + seconds / 60;
 
-    if (totalMinutes === 0) {
-      return `text-lg badge badge-lg badge-error ${
-        blinkStates[itemId] ? "opacity-100" : "opacity-0"
-      } transition-opacity duration-500`;
-    }
-    if (totalMinutes < 1) return "text-lg badge badge-lg badge-error";
-    if (totalMinutes < 20) return "text-lg badge badge-lg badge-warning";
-    return "text-lg badge badge-lg badge-primary";
-  };
+      if (totalMinutes === 0) {
+        return `text-lg badge badge-lg badge-error ${
+          blinkStates[itemId] ? "opacity-100" : "opacity-0"
+        } transition-opacity duration-500`;
+      }
+      if (totalMinutes < 1) return "text-lg badge badge-lg badge-error";
+      if (totalMinutes < 20) return "text-lg badge badge-lg badge-warning";
+      return "text-lg badge badge-lg badge-primary";
+    },
+    [blinkStates]
+  );
 
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+  const paginate = useCallback((pageNumber) => setCurrentPage(pageNumber), []);
 
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = menuItems.slice(indexOfFirstItem, indexOfLastItem);
+  const { currentItems, indexOfLastItem } = useMemo(() => {
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    return {
+      currentItems: menuItems.slice(indexOfFirstItem, indexOfLastItem),
+      indexOfLastItem,
+    };
+  }, [currentPage, menuItems]);
 
   return (
     <div className="p-4">
@@ -301,4 +317,4 @@ const HoldingTimeCur = () => {
   );
 };
 
-export default HoldingTimeCur;
+export default React.memo(HoldingTimeCur);
