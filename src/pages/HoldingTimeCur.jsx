@@ -14,6 +14,8 @@ import {
   updateStatusHoldingTime,
 } from "../services/holdingTimeService";
 import { createWasteItem } from "../services/wasteService";
+import { getProductsConfig } from "../services/productConfigService";
+import DeleteModal from "../component/DeleteModal";
 
 const HoldingTimeCur = () => {
   const [menuItems, setMenuItems] = useState([]);
@@ -22,9 +24,24 @@ const HoldingTimeCur = () => {
   const [blinkStates, setBlinkStates] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [productConfigs, setProductConfigs] = useState({});
+  const [itemDelete, setItemDelete] = useState(null);
   const itemsPerPage = 5;
 
   const processedItemIds = useMemo(() => new Set(), []);
+
+  const fetchProductConfigs = useCallback(async () => {
+    try {
+      const configs = await getProductsConfig();
+      setProductConfigs(configs);
+    } catch (error) {
+      console.error("Error fetching product configs:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchProductConfigs();
+  }, [fetchProductConfigs]);
 
   const calculateRemainingTime = useCallback((item, currentTime) => {
     const elapsedTime = currentTime - item.startTime;
@@ -101,9 +118,13 @@ const HoldingTimeCur = () => {
   }, [calculateRemainingTime, insertWasteItem, processedItemIds]);
 
   useEffect(() => {
-    fetchMenuItems();
-    const pollingInterval = setInterval(() => {
+    if (!searchTerm) {
       fetchMenuItems();
+    }
+    const pollingInterval = setInterval(() => {
+      if (!searchTerm) {
+        fetchMenuItems();
+      }
     }, 5000); // Poll every 5 seconds
 
     const timerInterval = setInterval(() => {
@@ -114,7 +135,7 @@ const HoldingTimeCur = () => {
       clearInterval(pollingInterval);
       clearInterval(timerInterval);
     };
-  }, [fetchMenuItems, updateLifeTimes]);
+  }, [fetchMenuItems, updateLifeTimes, searchTerm]);
 
   useEffect(() => {
     const blinkInterval = setInterval(() => {
@@ -159,37 +180,72 @@ const HoldingTimeCur = () => {
     [calculateRemainingTime]
   );
 
-  const handleDelete = useCallback(async (id) => {
+  const handleDeleteModal = (id) => {
+    console.log("Deleting item:", id);
+    setItemDelete(id);
+    document.getElementById("delete_modal").showModal();
+  };
+
+  const handleDelete = useCallback(async () => {
     setIsDeleting(true);
+    console.log("Deleting item:", itemDelete);
     try {
-      await deleteItemHoldingTime(id);
-      setMenuItems((prevItems) => prevItems.filter((item) => item.id !== id));
+      await deleteItemHoldingTime(itemDelete);
+      setMenuItems((prevItems) =>
+        prevItems.filter((item) => item.id !== itemDelete)
+      );
     } catch (error) {
       console.error("Error deleting product:", error);
     } finally {
       setIsDeleting(false);
+      setItemDelete(null);
+      document.getElementById("delete_modal").close();
     }
-  }, []);
+  }, [itemDelete]);
 
   const handleSearch = useCallback(() => {
     debouncedFetchMenuItems(searchTerm);
   }, [debouncedFetchMenuItems, searchTerm]);
 
+  // const getLifeTimeColor = useCallback(
+  //   (lifeTime, itemId) => {
+  //     const [hours, minutes, seconds] = lifeTime.split(":").map(Number);
+  //     const totalMinutes = hours * 60 + minutes + seconds / 60;
+
+  //     if (totalMinutes === 0) {
+  //       return `text-lg badge badge-lg badge-error ${
+  //         blinkStates[itemId] ? "opacity-100" : "opacity-0"
+  //       } transition-opacity duration-500`;
+  //     }
+  //     if (totalMinutes < 1) return "text-lg badge badge-lg badge-error";
+  //     if (totalMinutes < 20) return "text-lg badge badge-lg badge-warning";
+  //     return "text-lg badge badge-lg badge-primary";
+  //   },
+  //   [blinkStates]
+  // );
+
   const getLifeTimeColor = useCallback(
-    (lifeTime, itemId) => {
+    (lifeTime, itemNo, itemId) => {
       const [hours, minutes, seconds] = lifeTime.split(":").map(Number);
       const totalMinutes = hours * 60 + minutes + seconds / 60;
+
+      const config = productConfigs.find((c) => c.no_item === itemNo) || {};
+      const expiredThreshold = parseInt(config.expired_threshold) || 0;
+      const warningThreshold = parseInt(config.warning_threshold) || 3;
+      const primaryThreshold = parseInt(config.primary_threshold) || 10;
 
       if (totalMinutes === 0) {
         return `text-lg badge badge-lg badge-error ${
           blinkStates[itemId] ? "opacity-100" : "opacity-0"
-        } transition-opacity duration-500`;
+        } transition-opacity duration-1000`;
       }
-      if (totalMinutes < 1) return "text-lg badge badge-lg badge-error";
-      if (totalMinutes < 20) return "text-lg badge badge-lg badge-warning";
+      if (totalMinutes < expiredThreshold)
+        return "text-lg badge badge-lg badge-error";
+      if (totalMinutes < warningThreshold)
+        return "text-lg badge badge-lg badge-warning";
       return "text-lg badge badge-lg badge-primary";
     },
-    [blinkStates]
+    [blinkStates, productConfigs]
   );
 
   const paginate = useCallback((pageNumber) => setCurrentPage(pageNumber), []);
@@ -240,40 +296,44 @@ const HoldingTimeCur = () => {
           </tr>
         </thead>
         <tbody className="text-lg">
-          {
-            // isLoading ? (
-            //   <tr>
-            //     <td colSpan="6" className="text-center py-4">
-            //       <span className="loading loading-spinner loading-lg"></span>
-            //     </td>
-            //   </tr>
-            // ) : (
-            currentItems.map((item) => (
-              <tr key={item.id}>
-                <td>{item.name}</td>
-                <td>{item.qty}</td>
-                <td>{item.uom}</td>
-                <td>{item.kelompok}</td>
-                <td>
-                  <p className={getLifeTimeColor(item.lifeTime, item.id)}>
-                    {item.lifeTime}
-                  </p>
-                </td>
-                <td>
-                  {item.lifeTime == "00:00:00" && (
-                    <button
-                      className="btn btn-error text-lg"
-                      onClick={() => handleDelete(item.id)}
-                      disabled={isDeleting}
-                    >
-                      Delete
-                    </button>
+          {currentItems.length === 0 && (
+            <tr>
+              <td colSpan="6" className="text-center">
+                No data
+              </td>
+            </tr>
+          )}
+          {currentItems.map((item) => (
+            <tr key={item.id}>
+              <td>{item.name}</td>
+              <td>{item.qty}</td>
+              <td>{item.uom}</td>
+              <td>{item.kelompok}</td>
+              <td>
+                <p
+                  className={getLifeTimeColor(
+                    item.lifeTime,
+                    item.noitem,
+                    item.id
                   )}
-                </td>
-              </tr>
-            ))
-            // )
-          }
+                >
+                  {item.lifeTime}
+                </p>
+              </td>
+              <td>
+                {item.lifeTime == "00:00:00" && (
+                  <button
+                    className="btn btn-error text-lg"
+                    // onClick={() => handleDelete(item.id)}
+                    onClick={() => handleDeleteModal(item.id)}
+                    disabled={isDeleting}
+                  >
+                    Delete
+                  </button>
+                )}
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
       <div className="flex mt-4">
@@ -308,6 +368,7 @@ const HoldingTimeCur = () => {
         </div>
       </div>
       <AddProductModal addProduct={addProduct} isLoading={isLoading} />
+      <DeleteModal handleDelete={handleDelete} />
       {/* <div className="flex justify-between mt-4">
         <Link className="btn btn-primary" to={"/"}>
           DISPLAY HOLDING TIME

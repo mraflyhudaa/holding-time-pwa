@@ -8,7 +8,7 @@ const Navbar = ({ children }) => {
         <div className="drawer-content flex flex-col">
           {/* Navbar */}
           <div className="navbar bg-base-300 w-full">
-            <div className="flex-none ">
+            <div className="flex-none px-2">
               <label
                 htmlFor="my-drawer-3"
                 aria-label="open sidebar"
@@ -30,10 +30,11 @@ const Navbar = ({ children }) => {
               </label>
             </div>
             <div className="mx-2 flex-1 px-2">HOLDING TIME</div>
+            {/* <div className="ml-auto px-4">test</div> */}
           </div>
 
           {children}
-          <div className="flex justify-between  p-4">
+          <div className="flex justify-between p-4">
             <Link className="btn btn-primary" to={"/"}>
               DISPLAY HOLDING TIME
             </Link>
