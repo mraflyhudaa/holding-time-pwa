@@ -14,7 +14,7 @@ import {
   updateStatusHoldingTime,
 } from "../services/holdingTimeService";
 import { createWasteItem } from "../services/wasteService";
-import { getProductsConfig } from "../services/productConfigService";
+import { getProductThresholds } from "../services/productConfigService";
 import DeleteModal from "../component/DeleteModal";
 
 const HoldingTimeCur = () => {
@@ -32,7 +32,7 @@ const HoldingTimeCur = () => {
 
   const fetchProductConfigs = useCallback(async () => {
     try {
-      const configs = await getProductsConfig();
+      const configs = await getProductThresholds();
       setProductConfigs(configs);
     } catch (error) {
       console.error("Error fetching product configs:", error);
@@ -260,7 +260,7 @@ const HoldingTimeCur = () => {
   }, [currentPage, menuItems]);
 
   return (
-    <div className="p-4">
+    <div className="px-4 pt-4">
       <div className="flex mb-4">
         <input
           type="text"
