@@ -1,13 +1,13 @@
 import { Link } from "react-router-dom";
 
-const Navbar = ({ children }) => {
+const Navbar = ({ title, children }) => {
   return (
     <>
       <div className="drawer">
         <input id="my-drawer-3" type="checkbox" className="drawer-toggle" />
         <div className="drawer-content flex flex-col">
           {/* Navbar */}
-          <div className="navbar bg-base-300 w-full">
+          <div className="navbar bg-base-300 w-full z-50">
             <div className="flex-none px-2">
               <label
                 htmlFor="my-drawer-3"
@@ -29,7 +29,7 @@ const Navbar = ({ children }) => {
                 </svg>
               </label>
             </div>
-            <div className="mx-2 flex-1 px-2">HOLDING TIME</div>
+            <div className="mx-2 flex-1 px-2">{title}</div>
             {/* <div className="ml-auto px-4">test</div> */}
           </div>
 
@@ -51,12 +51,9 @@ const Navbar = ({ children }) => {
             aria-label="close sidebar"
             className="drawer-overlay"
           ></label>
-          <ul className="menu bg-base-200 min-h-full w-80 p-4">
+          <ul className="menu bg-base-200 min-h-full w-80 px-4 py-20">
             <li>
-              <a>MASTER KOMPOSISI</a>
-            </li>
-            <li>
-              <a>Sidebar Item 2</a>
+              <Link to={"/configuration"}>MASTER PRODUCTS</Link>
             </li>
           </ul>
         </div>
