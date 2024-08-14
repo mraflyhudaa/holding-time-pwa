@@ -1,3 +1,12 @@
+/**
+ * Navbar component.
+ *
+ * @component
+ * @param {Object} props - The component props.
+ * @param {string} props.title - The title of the navbar.
+ * @param {ReactNode} props.children - The children elements of the navbar.
+ * @returns {JSX.Element} The rendered Navbar component.
+ */
 import { Link } from "react-router-dom";
 
 const Navbar = ({ title, children }) => {
@@ -30,7 +39,30 @@ const Navbar = ({ title, children }) => {
               </label>
             </div>
             <div className="mx-2 flex-1 px-2">{title}</div>
-            {/* <div className="ml-auto px-4">test</div> */}
+            <div className="ml-auto px-4">
+              <div className="dropdown dropdown-end">
+                <div
+                  tabIndex={0}
+                  role="button"
+                  className="btn btn-ghost btn-circle avatar placeholder"
+                >
+                  <div className="bg-neutral text-neutral-content w-8 rounded-full">
+                    <span>SY</span>
+                  </div>
+                </div>
+                <ul
+                  tabIndex={0}
+                  className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
+                >
+                  <li>
+                    <p>Profile</p>
+                  </li>
+                  <li>
+                    <a>Logout</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
           </div>
 
           {children}

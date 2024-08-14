@@ -22,11 +22,7 @@ export const getProductThresholds = async (search) => {
 export const updateProductThresholds = async (id, updateData) => {
   const api = await initializeAxios();
   try {
-    const response = await api.put(`product-thresholds/${id}`, updateData, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    const response = await api.put(`product-thresholds/${id}`, updateData);
     console.log("data", updateData);
     return response.data;
   } catch (error) {

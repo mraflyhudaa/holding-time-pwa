@@ -20,10 +20,9 @@ const ProductsConfiguration = () => {
     warning_threshold: "",
     primary_threshold: "",
   });
-  const [originalData, setOriginalData] = useState({}); // Added state for original data
+  const [originalData, setOriginalData] = useState({});
   const itemsPerPage = 5;
 
-  // Debounced fetch function
   const debouncedFetchProducts = useMemo(
     () =>
       debounce(async (term) => {
@@ -54,7 +53,7 @@ const ProductsConfiguration = () => {
       warning_threshold: product.warning_threshold,
       primary_threshold: product.primary_threshold,
     });
-    setOriginalData(product); // Store original data
+    setOriginalData(product);
     document.getElementById("edit_modal").showModal();
   };
 
@@ -132,9 +131,9 @@ const ProductsConfiguration = () => {
             <th>No.</th>
             <th>Name</th>
             <th>Max Lifetime</th>
-            <th>Low</th>
-            <th>Medium</th>
-            <th>High</th>
+            <th>Red</th>
+            <th>Yellow</th>
+            <th>Green</th>
             <th>Action</th>
           </tr>
         </thead>

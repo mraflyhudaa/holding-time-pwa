@@ -369,16 +369,6 @@ const HoldingTimeCur = () => {
       </div>
       <AddProductModal addProduct={addProduct} isLoading={isLoading} />
       <DeleteModal handleDelete={handleDelete} />
-      {/* <div className="flex justify-between mt-4">
-        <Link className="btn btn-primary" to={"/"}>
-          DISPLAY HOLDING TIME
-        </Link>
-        <Link className="btn btn-info" to={"/pdlc"}>
-          PDLC
-        </Link>
-        <button className="btn btn-warning">RMLC</button>
-        <button className="btn btn-warning">ORDER MENU KHUSUS</button>
-      </div> */}
     </div>
   );
 };

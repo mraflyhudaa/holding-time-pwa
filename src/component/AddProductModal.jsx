@@ -1,3 +1,12 @@
+/**
+ * AddProductModal component.
+ *
+ * @component
+ * @param {Object} props - The component props.
+ * @param {Function} props.addProduct - The function to add a new product.
+ * @param {boolean} props.isLoading - Indicates if the component is in a loading state.
+ * @returns {JSX.Element} The AddProductModal component.
+ */
 import React, { useState, useEffect } from "react";
 import AsyncSelect from "react-select/async";
 import { getProducts } from "../services/productService";
