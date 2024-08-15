@@ -74,7 +74,9 @@ const Navbar = ({ title, children }) => {
               PDLC
             </Link>
             <button className="btn btn-warning">RMLC</button>
-            <button className="btn btn-warning">ORDER MENU KHUSUS</button>
+            <Link className="btn btn-warning" to={"/order-menu-khusus"}>
+              ORDER MENU KHUSUS
+            </Link>
           </div>
         </div>
         <div className="drawer-side">

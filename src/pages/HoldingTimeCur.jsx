@@ -15,7 +15,7 @@ import {
 } from "../services/holdingTimeService";
 import { createWasteItem } from "../services/wasteService";
 import { getProductThresholds } from "../services/productConfigService";
-import DeleteModal from "../component/DeleteModal";
+import ConfirmationModal from "../component/ConfirmationModal";
 
 const HoldingTimeCur = () => {
   const [menuItems, setMenuItems] = useState([]);
@@ -183,7 +183,7 @@ const HoldingTimeCur = () => {
   const handleDeleteModal = (id) => {
     console.log("Deleting item:", id);
     setItemDelete(id);
-    document.getElementById("delete_modal").showModal();
+    document.getElementById("confirmation_modal").showModal();
   };
 
   const handleDelete = useCallback(async () => {
@@ -199,7 +199,7 @@ const HoldingTimeCur = () => {
     } finally {
       setIsDeleting(false);
       setItemDelete(null);
-      document.getElementById("delete_modal").close();
+      document.getElementById("confirmation_modal").close();
     }
   }, [itemDelete]);
 
@@ -368,7 +368,12 @@ const HoldingTimeCur = () => {
         </div>
       </div>
       <AddProductModal addProduct={addProduct} isLoading={isLoading} />
-      <DeleteModal handleDelete={handleDelete} />
+      <ConfirmationModal
+        title="Delete Item"
+        description="Are you sure you want to delete this item?"
+        handle={handleDelete}
+        buttonName="Delete"
+      />
     </div>
   );
 };
