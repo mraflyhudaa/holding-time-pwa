@@ -4,6 +4,7 @@ import {
   updateProductThresholds,
 } from "../services/productConfigService";
 import { debounce } from "lodash";
+import TimeField from "react-simple-timefield";
 
 const ProductsConfiguration = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -67,7 +68,6 @@ const ProductsConfiguration = () => {
 
   const handleConfirmEdit = async () => {
     setIsLoading(true);
-
     const changes = Object.keys(editFormData).reduce((acc, key) => {
       if (editFormData[key] !== originalData[key]) {
         acc[key] = editFormData[key];
@@ -133,7 +133,7 @@ const ProductsConfiguration = () => {
             <th>Max Lifetime</th>
             <th>Red</th>
             <th>Yellow</th>
-            <th>Green</th>
+            {/* <th>Green</th> */}
             <th>Action</th>
           </tr>
         </thead>
@@ -152,7 +152,7 @@ const ProductsConfiguration = () => {
               <td>{product.max_holding_time}</td>
               <td>{product.expired_threshold}</td>
               <td>{product.warning_threshold}</td>
-              <td>{product.primary_threshold}</td>
+              {/* <td>{product.primary_threshold}</td> */}
               <td>
                 <div className="dropdown dropdown-end">
                   <div
@@ -256,12 +256,26 @@ const ProductsConfiguration = () => {
               <label className="label">
                 <span className="label-text">Max Lifetime</span>
               </label>
-              <input
+              {/* <input
                 type="text"
                 name="max_holding_time"
                 value={editFormData.max_holding_time}
                 onChange={handleEditFormChange}
                 className="input input-bordered"
+              /> */}
+              <TimeField
+                name="max_holding_time"
+                value={editFormData.max_holding_time}
+                onChange={handleEditFormChange}
+                colon=":"
+                showSeconds
+                input={
+                  <input
+                    name="max_holding_time"
+                    type="text"
+                    className="input input-bordered"
+                  />
+                }
               />
             </div>
             <div className="form-control">
@@ -288,7 +302,7 @@ const ProductsConfiguration = () => {
                 className="input input-bordered"
               />
             </div>
-            <div className="form-control">
+            {/* <div className="form-control">
               <label className="label">
                 <span className="label-text">High</span>
               </label>
@@ -299,7 +313,7 @@ const ProductsConfiguration = () => {
                 onChange={handleEditFormChange}
                 className="input input-bordered"
               />
-            </div>
+            </div> */}
           </div>
           <div className="modal-action">
             <button className="btn btn-primary" onClick={handleConfirmEdit}>

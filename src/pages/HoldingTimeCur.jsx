@@ -299,7 +299,7 @@ const HoldingTimeCur = () => {
           {currentItems.length === 0 && (
             <tr>
               <td colSpan="6" className="text-center">
-                No data
+                No items found
               </td>
             </tr>
           )}
@@ -328,7 +328,7 @@ const HoldingTimeCur = () => {
                     onClick={() => handleDeleteModal(item.id)}
                     disabled={isDeleting}
                   >
-                    Delete
+                    {item.qty <= 0 ? "Delete" : "Waste"}
                   </button>
                 )}
               </td>

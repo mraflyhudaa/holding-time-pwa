@@ -6,6 +6,7 @@ import HoldingTimeCur from "./pages/HoldingTimeCur";
 import PDLC from "./pages/PDLC";
 import ProductsConfiguration from "./pages/ProductsConfiguration";
 import OrderMenuKhusus from "./pages/OrderMenuKhusus";
+import Test from "./pages/Test";
 
 createRoot(document.getElementById("app")).render(
   <BrowserRouter>
@@ -16,6 +17,7 @@ createRoot(document.getElementById("app")).render(
         <Route path="/pdlc" element={<PDLC />} />
         <Route path="/configuration" element={<ProductsConfiguration />} />
         <Route path="/order-menu-khusus" element={<OrderMenuKhusus />} />
+        <Route path="/test" element={<Test />} />
       </Route>
       <Route path="*" element={<h1>Not Found</h1>} />
     </Routes>

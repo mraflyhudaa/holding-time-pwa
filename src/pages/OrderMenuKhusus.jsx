@@ -126,7 +126,7 @@ const OrderMenuKhusus = () => {
         <thead className="text-lg bg-slate-300 text-black">
           <tr>
             <th>No Item</th>
-            <th>Item Komposisi / Menu</th>
+            <th>Item</th>
             <th>PLU</th>
             <th>Qty</th>
             <th>UOM</th>
@@ -140,11 +140,20 @@ const OrderMenuKhusus = () => {
           </tr>
         </thead>
         <tbody className="text-lg">
+          {currentItems.length === 0 && (
+            <tr>
+              <td colSpan="7" className="text-center">
+                No items found
+              </td>
+            </tr>
+          )}
           {currentItems.map((item, index) => (
             <tr key={index}>
               <td>{item.noitem}</td>
               <td>{item.name}</td>
-              <td>{item.plu}</td>
+              <td>
+                {item.plu} - {}
+              </td>
               <td>{item.qty}</td>
               <td>{item.uom}</td>
               <td>{item.status === "finished" ? "Done" : "Pending"}</td>

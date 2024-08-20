@@ -16,7 +16,7 @@ function App() {
       case "/holding-time":
         return "Holding Time";
       default:
-        return "Home";
+        return "Holding Time";
     }
   };
 
