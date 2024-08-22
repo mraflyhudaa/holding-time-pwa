@@ -21,7 +21,7 @@ function App() {
   };
 
   return (
-    <main className="App">
+    <main className="App" data-theme="emerald">
       <Navbar title={getTitle()}>
         <Outlet />
       </Navbar>

@@ -125,12 +125,14 @@ const OrderMenuKhusus = () => {
       <table className="table w-full border table-zebra">
         <thead className="text-lg bg-slate-300 text-black">
           <tr>
-            <th>No Item</th>
-            <th>Item</th>
+            {/* <th>No Item</th>
+            <th>Item</th> */}
+            <th>No PLU</th>
             <th>PLU</th>
             <th>Qty</th>
             <th>UOM</th>
             <th>Status</th>
+            <th>Date</th>
             {/* <th>
               <button onClick={toggleSortDirection}>
                 Updated At {sortDirection === "asc" ? "▲" : "▼"}
@@ -149,15 +151,14 @@ const OrderMenuKhusus = () => {
           )}
           {currentItems.map((item, index) => (
             <tr key={index}>
-              <td>{item.noitem}</td>
-              <td>{item.name}</td>
-              <td>
-                {item.plu} - {}
-              </td>
+              {/* <td>{item.noitem}</td>
+              <td>{item.name}</td> */}
+              <td>{item.plu}</td>
+              <td>{item.description}</td>
               <td>{item.qty}</td>
               <td>{item.uom}</td>
               <td>{item.status === "finished" ? "Done" : "Pending"}</td>
-              {/* <td>{new Date(item.updated_at).toLocaleString()}</td> */}
+              <td>{new Date(item.created_at).toLocaleString()}</td>
               <td>
                 <button
                   className="btn btn-outline"

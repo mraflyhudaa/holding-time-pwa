@@ -2,7 +2,7 @@
 export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   daisyui: {
-    themes: true,
+    themes: ["emerald"],
     base: true,
     styled: true,
     utils: true,
