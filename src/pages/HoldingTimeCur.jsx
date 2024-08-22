@@ -233,16 +233,15 @@ const HoldingTimeCur = () => {
       const expiredThreshold = parseInt(config.expired_threshold) || 0;
       const warningThreshold = parseInt(config.warning_threshold) || 3;
       const primaryThreshold = parseInt(config.primary_threshold) || 10;
-      console.log("config", config);
 
       if (totalMinutes === 0) {
         return `text-lg badge badge-lg badge-error ${
           blinkStates[itemId] ? "opacity-100" : "opacity-0"
         } transition-opacity duration-1000`;
       }
-      if (totalMinutes < expiredThreshold)
+      if (totalMinutes <= expiredThreshold)
         return "text-lg badge badge-lg badge-error";
-      if (totalMinutes < warningThreshold)
+      if (totalMinutes <= warningThreshold)
         return "text-lg badge badge-lg badge-warning";
       return "text-lg badge badge-lg badge-primary";
     },
@@ -309,7 +308,7 @@ const HoldingTimeCur = () => {
           {currentItems.map((item) => (
             <tr key={item.id}>
               <td>{item.name}</td>
-              <td>{item.display.description}</td>
+              <td>{item.display?.description}</td>
               <td>{item.uom.trim() == "pcs" ? "-" : item.qty_portion}</td>
               <td>{item.qty}</td>
               <td>{item.uom}</td>
