@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
-import { debounce } from "lodash";
+import { debounce, trim } from "lodash";
 import AddProductModal from "../component/AddProductModal";
 import { formatTime } from "../utils/formatTime";
 import { sortItemsByLifeTime } from "../utils/sortItemsByLifetime";
@@ -229,10 +229,11 @@ const HoldingTimeCur = () => {
       const [hours, minutes, seconds] = lifeTime.split(":").map(Number);
       const totalMinutes = hours * 60 + minutes + seconds / 60;
 
-      const config = productConfigs.find((c) => c.no_item === itemNo) || {};
+      const config = productConfigs.find((c) => c.noitem === itemNo) || {};
       const expiredThreshold = parseInt(config.expired_threshold) || 0;
       const warningThreshold = parseInt(config.warning_threshold) || 3;
       const primaryThreshold = parseInt(config.primary_threshold) || 10;
+      console.log("config", config);
 
       if (totalMinutes === 0) {
         return `text-lg badge badge-lg badge-error ${
@@ -288,6 +289,8 @@ const HoldingTimeCur = () => {
         <thead className="text-lg bg-slate-300 text-black">
           <tr>
             <th>Item komposisi/ Menu</th>
+            <th>Display</th>
+            <th>Qty Porsi</th>
             <th>Qty</th>
             <th>UOM</th>
             <th>Kelompok</th>
@@ -298,7 +301,7 @@ const HoldingTimeCur = () => {
         <tbody className="text-lg">
           {currentItems.length === 0 && (
             <tr>
-              <td colSpan="6" className="text-center">
+              <td colSpan="7" className="text-center">
                 No items found
               </td>
             </tr>
@@ -306,6 +309,8 @@ const HoldingTimeCur = () => {
           {currentItems.map((item) => (
             <tr key={item.id}>
               <td>{item.name}</td>
+              <td>{item.display.description}</td>
+              <td>{item.uom.trim() == "pcs" ? "-" : item.qty_portion}</td>
               <td>{item.qty}</td>
               <td>{item.uom}</td>
               <td>{item.kelompok}</td>

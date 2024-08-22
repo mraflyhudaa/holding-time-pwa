@@ -10,21 +10,30 @@
 import React, { useState, useEffect } from "react";
 import AsyncSelect from "react-select/async";
 import { getProducts } from "../services/productService";
+import { getMasterDisplay } from "../services/masterDisplayService";
 
 const AddProductModal = ({ addProduct, isLoading }) => {
   const [productData, setProductData] = useState({
     noitem: "",
     name: "",
-    qty: "",
+    qty_portion: "",
     uom: "",
     lifeTime: "",
   });
+  const [calculatedQty, setCalculatedQty] = useState(""); // State for calculated quantity
   const [products, setProducts] = useState([]);
+  const [display, setDisplay] = useState([]);
   const [options, setOptions] = useState([]);
+  const [displayOptions, setDisplayOptions] = useState([]);
 
   useEffect(() => {
     fetchProducts();
+    fetchDisplay();
   }, []);
+
+  useEffect(() => {
+    calculateQty(); // Recalculate qty whenever noitem or qty_portion changes
+  }, [productData.noitem, productData.qty_portion]);
 
   const fetchProducts = async () => {
     try {
@@ -40,9 +49,33 @@ const AddProductModal = ({ addProduct, isLoading }) => {
     }
   };
 
+  const fetchDisplay = async () => {
+    try {
+      const response = await getMasterDisplay();
+      console.log("Display:", response);
+      setDisplay(response);
+      const arr = response.map((d) => ({
+        value: d.id,
+        label: d.description,
+      }));
+      setDisplayOptions(arr);
+    } catch (error) {
+      console.error("Error fetching display:", error);
+    }
+  };
+
   const loadOptions = (inputValue) => {
     return new Promise((resolve) => {
       const filteredOptions = options.filter((option) =>
+        option.label.toLowerCase().includes(inputValue.toLowerCase())
+      );
+      resolve(filteredOptions);
+    });
+  };
+
+  const loadDisplayOptions = (inputValue) => {
+    return new Promise((resolve) => {
+      const filteredOptions = displayOptions.filter((option) =>
         option.label.toLowerCase().includes(inputValue.toLowerCase())
       );
       resolve(filteredOptions);
@@ -75,12 +108,40 @@ const AddProductModal = ({ addProduct, isLoading }) => {
     }
   };
 
+  const handleDisplayChange = (selectedOption) => {
+    if (selectedOption) {
+      setDisplay({
+        id: selectedOption.value,
+        description: selectedOption.label,
+      });
+    } else {
+      setDisplay({});
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setProductData((prevData) => ({
       ...prevData,
       [name]: value,
     }));
+    console.log("productData", productData);
+  };
+
+  const calculateQty = () => {
+    const { noitem, qty_portion } = productData;
+    const product = products.find((p) => p.noitem === noitem);
+    if (product) {
+      const baseQty = product.qty;
+      const uom = product.uom;
+      if (uom === "pcs") {
+        setCalculatedQty(qty_portion); // No conversion needed for 'pcs'
+      } else {
+        setCalculatedQty(baseQty * qty_portion); // Calculate converted qty
+      }
+    } else {
+      setCalculatedQty(""); // Clear the qty if product is not selected
+    }
   };
 
   const handleSubmit = (e) => {
@@ -88,17 +149,20 @@ const AddProductModal = ({ addProduct, isLoading }) => {
     addProduct({
       noitem: productData.noitem,
       name: productData.name,
-      qty: productData.qty,
+      qty_portion: productData.qty_portion,
       uom: productData.uom,
       lifeTime: productData.lifeTime,
+      display_id: display.id,
     });
     setProductData({
       noitem: "",
       name: "",
-      qty: "",
+      qty_portion: "",
       uom: "",
       lifeTime: "00:00:00",
     });
+    setDisplay({});
+    setCalculatedQty(""); // Reset calculated quantity
     document.getElementById("my_modal_1").close();
   };
 
@@ -131,47 +195,93 @@ const AddProductModal = ({ addProduct, isLoading }) => {
                 styles={{
                   control: (styles) => ({ ...styles, height: "48px" }),
                 }}
-              />
-            </div>
-            <div className="mb-4">
-              <label
-                className="block mb-2 text-sm font-bold text-gray-700"
-                htmlFor="qty"
-              >
-                Quantity
-              </label>
-              <input
-                type="text"
-                inputMode="numeric"
-                id="qty"
-                name="qty"
-                value={productData.qty}
-                onChange={handleInputChange}
-                className="w-full max-w-full input input-bordered focus:input-secondary"
                 required
               />
             </div>
             <div className="mb-4">
               <label
                 className="block mb-2 text-sm font-bold text-gray-700"
-                htmlFor="uom"
+                htmlFor="qty_portion"
               >
-                UOM
+                Quantity Portion
               </label>
               <input
                 type="text"
-                id="uom"
-                name="uom"
-                value={productData.uom}
+                inputMode="numeric"
+                id="qty_portion"
+                name="qty_portion"
+                value={productData.qty_portion}
                 onChange={handleInputChange}
-                className="w-full max-w-full input input-bordered focus:input-primary"
-                readOnly
+                className="w-full max-w-full input input-bordered focus:input-secondary"
+                required
               />
+            </div>
+            <div className="mb-4 flex flex-row justify-between">
+              <div>
+                <label
+                  className="block mb-2 text-sm font-bold text-gray-700"
+                  htmlFor="calculatedQty"
+                >
+                  Calculated Quantity
+                </label>
+                <input
+                  type="text"
+                  id="calculatedQty"
+                  name="calculatedQty"
+                  value={calculatedQty}
+                  className="w-full max-w-full input input-bordered focus:input-primary"
+                  readOnly
+                />
+              </div>
+              <div>
+                <label
+                  className="block mb-2 text-sm font-bold text-gray-700"
+                  htmlFor="uom"
+                >
+                  UOM
+                </label>
+                <input
+                  type="text"
+                  id="uom"
+                  name="uom"
+                  value={productData.uom}
+                  onChange={handleInputChange}
+                  className="w-full max-w-full input input-bordered focus:input-primary"
+                  readOnly
+                />
+              </div>
             </div>
             <div className="mb-4">
               <label
                 className="block mb-2 text-sm font-bold text-gray-700"
-                htmlFor="max_holding_time"
+                htmlFor="display"
+              >
+                Display
+              </label>
+              <AsyncSelect
+                name="display_id"
+                isSearchable
+                cacheOptions
+                loadOptions={loadDisplayOptions}
+                defaultOptions={displayOptions}
+                onChange={handleDisplayChange}
+                value={
+                  display.id
+                    ? { value: display.id, label: display.description }
+                    : null
+                }
+                className="w-full max-w-full focus:input-primary"
+                styles={{
+                  control: (styles) => ({ ...styles, height: "48px" }),
+                }}
+                required
+              />
+            </div>
+
+            <div className="mb-4">
+              <label
+                className="block mb-2 text-sm font-bold text-gray-700"
+                htmlFor="lifeTime"
               >
                 Max Holding Time (minutes)
               </label>

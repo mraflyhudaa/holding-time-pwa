@@ -1,6 +1,6 @@
 {
   "development": {
-    "baseURL": "http://172.18.123.85:8080/api"
+    "baseURL": "http://localhost:8080/api"
   },
   "production": {
     "baseURL": "http://172.18.123.85:8080/api"

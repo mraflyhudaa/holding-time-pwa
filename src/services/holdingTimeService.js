@@ -25,9 +25,10 @@ export const createItemHoldingTime = async (item) => {
     const response = await api.post("holding-time", {
       noitem: item.noitem,
       name: item.name,
-      qty: item.qty,
+      qty_portion: item.qty_portion,
       uom: item.uom,
       lifeTime: item.lifeTime || "00:00:00",
+      display_id: item.display_id,
     });
     return response.data;
   } catch (error) {
