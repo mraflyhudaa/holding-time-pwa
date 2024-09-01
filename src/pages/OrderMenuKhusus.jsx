@@ -1,10 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { debounce } from "lodash";
+import ConfirmationModal from "../component/ConfirmationModal.jsx";
+import { getSpecialProductThresholds } from "../services/productConfigService.js";
+import { convertToMilliseconds } from "../utils/convertToMilliseconds.js";
 import {
+  deleteOrderSpecialItem,
   getOrderSpecialItems,
   updateOrderSpecialItemStatus,
-} from "../services/orderMenuKhusus";
-import { debounce } from "lodash";
-import ConfirmationModal from "../component/ConfirmationModal";
+} from "../services/orderMenuKhusus.js";
+import { formatTime } from "../utils/formatTime.js";
+import { sortItemsByLifeTime } from "../utils/sortItemsByLifetime.js";
 
 const OrderMenuKhusus = () => {
   const [menuItems, setMenuItems] = useState([]);
@@ -13,26 +18,136 @@ const OrderMenuKhusus = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [sortDirection, setSortDirection] = useState("asc"); // State for sorting direction
   const [itemComplete, setItemComplete] = useState(null);
+  const [productConfigs, setProductConfigs] = useState({});
+
+  const [blinkStates, setBlinkStates] = useState({});
+
+  const processedItemIds = useMemo(() => new Set(), []);
 
   const itemsPerPage = 5;
 
-  const fetchItems = useCallback(async () => {
-    // setIsLoading(true);
+  const fetchProductConfigs = useCallback(async () => {
     try {
-      const items = await getOrderSpecialItems(searchTerm);
-      console.log("items", items);
-      setMenuItems(items);
+      const configs = await getSpecialProductThresholds();
+      setProductConfigs(configs);
+      console.log("Product Configs:", configs);
     } catch (error) {
-      console.error("Failed to fetch special items:", error);
-    } finally {
-      // setIsLoading(false);
+      console.error("Error fetching product configs:", error);
     }
-  }, [searchTerm]);
+  }, []);
+
+  useEffect(() => {
+    fetchProductConfigs();
+  }, [fetchProductConfigs]);
+
+  const calculateRemainingTime = useCallback((item, currentTime) => {
+    const elapsedTime = currentTime - item.cooking_start_time;
+    const initialLifeTimeMs = convertToMilliseconds(
+      item.initialLifeTime || item.cooking_time
+    );
+    const remainingTime = Math.max(initialLifeTimeMs - elapsedTime, 0);
+    return {
+      ...item,
+      remainingTimeMs: remainingTime,
+      cooking_time: formatTime(remainingTime),
+    };
+  }, []);
+
+  const fetchItems = useCallback(
+    async (search = "") => {
+      try {
+        const response = await getOrderSpecialItems(search);
+        const currentTime = new Date().getTime();
+        const items = response.map((item) => ({
+          ...item,
+          initialLifeTime: item.cooking_time,
+          cooking_start_time: item.cooking_start_time || currentTime,
+        }));
+        const calculatedItems = items.map((item) =>
+          calculateRemainingTime(item, currentTime)
+        );
+        setMenuItems(sortItemsByLifeTime(calculatedItems));
+      } catch (error) {
+        console.error("Error fetching menu items:", error);
+      }
+    },
+    [calculateRemainingTime]
+  );
 
   const debouncedFetchMenuItems = useMemo(
     () => debounce(fetchItems, 300),
     [fetchItems]
   );
+
+  // const updateLifeTimes = useCallback(() => {
+  //   const currentTime = new Date().getTime();
+  //   setMenuItems((prevItems) => {
+  //     const updatedItems = prevItems.map((item) => {
+  //       const updatedItem = calculateRemainingTime(item, currentTime);
+  //       console.log("Updated Item:", updatedItem.cooking_time);
+  //       if (
+  //         updatedItem.cooking_time === "00:00:00" &&
+  //         !processedItemIds.has(item.id) &&
+  //         item.status !== "finished"
+  //       ) {
+  //         updateOrderSpecialItemStatus(item)
+  //           .then((response) => {
+  //             console.log("Marked as finished:", response);
+  //           })
+  //           .catch((error) => {
+  //             console.error("Error marking as finished:", error);
+  //           });
+  //         // insertWasteItem(updatedItem);
+  //         processedItemIds.add(item.id);
+  //       }
+  //       return updatedItem;
+  //     });
+  //     return sortItemsByLifeTime(updatedItems);
+  //   });
+  // }, [calculateRemainingTime, processedItemIds]);
+
+  const updateLifeTimes = useCallback(() => {
+    const currentTime = new Date().getTime();
+    setMenuItems((prevItems) => {
+      const updatedItems = prevItems.map((item) => {
+        const updatedItem = calculateRemainingTime(item, currentTime);
+
+        const itemUpdatedAt = new Date(item.updated_at).getTime();
+        const elapsedTime = currentTime - itemUpdatedAt;
+        const cookingTimeInMs = convertToMilliseconds(updatedItem.cooking_time);
+        if (
+          updatedItem.cooking_time === "00:00:00" &&
+          !processedItemIds.has(item.id) &&
+          item.status !== "finished"
+        ) {
+          updatedItem.status = "finished";
+          updateOrderSpecialItemStatus(item)
+            .then((response) => {
+              console.log("Marked as finished:", response);
+              // processedItemIds.add(item.id);
+            })
+            .catch((error) => {
+              console.error("Error marking as finished:", error);
+            });
+        }
+        const bufferTimeMs = 2 * 60 * 1000; // Buffer time of 2 minutes
+        if (item.status === "finished" && elapsedTime > bufferTimeMs) {
+          deleteOrderSpecialItem(item.id)
+            .then(() => {
+              console.log(`Item with id ${item.id} deleted`);
+              setMenuItems((prevItems) =>
+                prevItems.filter((i) => i.id !== item.id)
+              );
+            })
+            .catch((error) => {
+              console.error(`Failed to delete item with id ${item.id}:`, error);
+            });
+        }
+        return updatedItem;
+      });
+      return sortItemsByLifeTime(updatedItems);
+    });
+  }, [calculateRemainingTime, processedItemIds]);
 
   useEffect(() => {
     if (!searchTerm) {
@@ -43,13 +158,36 @@ const OrderMenuKhusus = () => {
         fetchItems();
       }
     }, 5000);
-    return () => clearInterval(pollingInterval);
-  }, [fetchItems, searchTerm]);
+
+    const timerInterval = setInterval(() => {
+      updateLifeTimes();
+    }, 1000); // Update the timer every second
+
+    return () => {
+      clearInterval(pollingInterval);
+      clearInterval(timerInterval);
+    };
+  }, [fetchItems, updateLifeTimes, searchTerm]);
+
+  useEffect(() => {
+    const blinkInterval = setInterval(() => {
+      setBlinkStates((prevStates) => {
+        const newStates = { ...prevStates };
+        menuItems.forEach((item) => {
+          if (item.cooking_time === "00:00:00") {
+            newStates[item.id] = !prevStates[item.id];
+          }
+        });
+        return newStates;
+      });
+    }, 500);
+
+    return () => clearInterval(blinkInterval);
+  }, [menuItems]);
 
   const paginate = useCallback((pageNumber) => setCurrentPage(pageNumber), []);
 
   const sortedMenuItems = useMemo(() => {
-    // Sort items by updated_at
     return [...menuItems].sort((a, b) => {
       const dateA = new Date(a.updated_at);
       const dateB = new Date(b.updated_at);
@@ -72,7 +210,6 @@ const OrderMenuKhusus = () => {
   }, [currentPage, sortedMenuItems]);
 
   const handleCompleteModal = (id) => {
-    console.log("Mark as Complete item:", id);
     setItemComplete(id);
     document.getElementById("confirmation_modal").showModal();
   };
@@ -97,11 +234,34 @@ const OrderMenuKhusus = () => {
     debouncedFetchMenuItems(searchTerm);
   }, [debouncedFetchMenuItems, searchTerm]);
 
-  const toggleSortDirection = () => {
-    setSortDirection((prevDirection) =>
-      prevDirection === "asc" ? "desc" : "asc"
-    );
-  };
+  const getLifeTimeColor = useCallback(
+    (lifeTime, itemNo, itemId) => {
+      const [hours, minutes, seconds] = lifeTime.split(":").map(Number);
+      const totalMinutes = hours * 60 + minutes + seconds / 60;
+
+      const config = productConfigs.find((c) => c.noitem === itemNo) || {};
+      const expiredThreshold = parseInt(config.expired_threshold) || 0;
+      const warningThreshold = parseInt(config.warning_threshold) || 3;
+      const primaryThreshold = parseInt(config.primary_threshold) || 10;
+
+      let className;
+      if (totalMinutes === 0) {
+        className = `text-lg badge badge-lg badge-error ${
+          blinkStates[itemId] ? "opacity-100" : "opacity-0"
+        } transition-opacity duration-500`;
+      } else if (totalMinutes <= expiredThreshold) {
+        className = "text-lg badge badge-lg ";
+      } else if (totalMinutes <= warningThreshold) {
+        className = "text-lg badge badge-lg ";
+      } else {
+        className = "text-lg badge badge-lg ";
+      }
+
+      // console.log("Life Time Color Class:", className);
+      return className;
+    },
+    [blinkStates, productConfigs]
+  );
 
   return (
     <div className="px-4 pt-4">
@@ -129,8 +289,10 @@ const OrderMenuKhusus = () => {
             <th>Item</th> */}
             <th>No PLU</th>
             <th>PLU</th>
+            <th>Qty Porsi</th>
             <th>Qty</th>
             <th>UOM</th>
+            <th>Cooking Time</th>
             <th>Status</th>
             <th>Date</th>
             {/* <th>
@@ -144,7 +306,7 @@ const OrderMenuKhusus = () => {
         <tbody className="text-lg">
           {currentItems.length === 0 && (
             <tr>
-              <td colSpan="7" className="text-center">
+              <td colSpan="9" className="text-center">
                 No items found
               </td>
             </tr>
@@ -155,10 +317,22 @@ const OrderMenuKhusus = () => {
               <td>{item.name}</td> */}
               <td>{item.plu}</td>
               <td>{item.description}</td>
+              <td>{item.qty_portion}</td>
               <td>{item.qty}</td>
               <td>{item.uom}</td>
+              <td>
+                <p
+                  className={getLifeTimeColor(
+                    item.cooking_time,
+                    item.noitem,
+                    item.id
+                  )}
+                >
+                  {item.cooking_time}
+                </p>
+              </td>
               <td>{item.status === "finished" ? "Done" : "Pending"}</td>
-              <td>{new Date(item.created_at).toLocaleString()}</td>
+              <td>{new Date(item.created_at).toLocaleString("id")}</td>
               <td>
                 <button
                   className="btn btn-outline"
@@ -215,4 +389,4 @@ const OrderMenuKhusus = () => {
   );
 };
 
-export default OrderMenuKhusus;
+export default React.memo(OrderMenuKhusus);

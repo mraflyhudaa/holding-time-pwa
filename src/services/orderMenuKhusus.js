@@ -84,10 +84,10 @@ export const deleteOrderSpecialItem = async (id) => {
   }
 };
 
-export const updateOrderSpecialItemStatus = async (id) => {
+export const updateOrderSpecialItemStatus = async (item) => {
   const api = await initializeAxios();
   try {
-    const response = await api.put(`special-items/${id}`, {
+    const response = await api.put(`special-items/${item.id}`, {
       status: "finished",
     });
     return response.data;
