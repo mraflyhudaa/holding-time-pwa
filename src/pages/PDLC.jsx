@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 const generateFullDayTimes = () => {
@@ -62,17 +62,51 @@ const timesPerPage = 3;
 const PDLC = () => {
   const [menuItems, setMenuItems] = useState(initialMenuItems);
   const [currentPage, setCurrentPage] = useState(1);
-  const [timePage, setTimePage] = useState(1);
+  const [timePage, setTimePage] = useState(0);
 
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
-  const paginateTime = (pageNumber) => setTimePage(pageNumber);
+  const itemsPerPage = 5;
+  const timesPerPage = 3;
+
+  const baseMin = 4;
+  const baseMax = 10;
+  const hourlyFactor = 1;
+
+  // Define your peak hours (e.g., from 12 PM to 2 PM)
+  const peakHours = [12, 13, 14];
+
+  // Peak multiplier (e.g., increase by 50% during peak hours)
+  const peakMultiplier = 1.5;
+
+  const calculateMin = (baseMin, hourlyFactor, hourIndex) => {
+    const isPeakHour = peakHours.includes(hourIndex);
+    const multiplier = isPeakHour ? peakMultiplier : 1;
+    return baseMin + hourlyFactor * hourIndex * multiplier;
+  };
+
+  const calculateMax = (baseMax, hourlyFactor, hourIndex) => {
+    const isPeakHour = peakHours.includes(hourIndex);
+    const multiplier = isPeakHour ? peakMultiplier : 1;
+    return baseMax + hourlyFactor * hourIndex * multiplier;
+  };
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = menuItems.slice(indexOfFirstItem, indexOfLastItem);
 
-  const indexOfLastTime = timePage * timesPerPage;
-  const indexOfFirstTime = indexOfLastTime - timesPerPage;
+  const getCurrentHour = () => {
+    const now = new Date();
+    return now.getHours();
+  };
+
+  useEffect(() => {
+    setTimePage(getCurrentHour());
+  }, []);
+
+  const indexOfLastTime = timePage + timesPerPage;
+  const indexOfFirstTime = timePage;
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+  const paginateTime = (pageNumber) => setTimePage(pageNumber);
 
   return (
     <div className="px-4 pt-4">
@@ -91,34 +125,38 @@ const PDLC = () => {
             <th>Item komposisi/ Menu</th>
             <th>Unit</th>
             <th>Qty</th>
-            {Array.from(
-              { length: timesPerPage },
-              (_, i) => indexOfFirstTime + i
-            ).map((timeIdx) => (
-              <th key={timeIdx} colSpan={2} className="text-center">
-                {timeIdx < 24 ? currentItems[0].times[timeIdx].time : ""}
-                <br />
-                {timeIdx < 24 ? currentItems[0].times[timeIdx].status : ""}
-              </th>
-            ))}
+            {Array.from({ length: timesPerPage }).map((_, i) => {
+              const timeIdx = indexOfFirstTime + i;
+              return (
+                <th key={timeIdx} colSpan={2} className="text-center">
+                  {timeIdx < 24 ? currentItems[0].times[timeIdx].time : ""}
+                  <br />
+                  {timeIdx < 24 ? currentItems[0].times[timeIdx].status : ""}
+                </th>
+              );
+            })}
           </tr>
           <tr>
             <th></th>
             <th></th>
             <th></th>
-            {Array.from(
-              { length: timesPerPage },
-              (_, i) => indexOfFirstTime + i
-            ).map((timeIdx) => (
-              <React.Fragment key={timeIdx}>
-                <th key={timeIdx + "min"} className="text-center">
-                  {timeIdx < 24 ? "MIN" : ""}
-                </th>
-                <th key={timeIdx + "max"} className="text-center">
-                  {timeIdx < 24 ? "MAX" : ""}
-                </th>
-              </React.Fragment>
-            ))}
+            {Array.from({ length: timesPerPage }).map((_, i) => {
+              const timeIdx = indexOfFirstTime + i;
+              return (
+                <React.Fragment key={timeIdx}>
+                  <th key={timeIdx + "min"} className="text-center">
+                    {timeIdx < 24
+                      ? calculateMin(baseMin, hourlyFactor, timeIdx)
+                      : ""}
+                  </th>
+                  <th key={timeIdx + "max"} className="text-center">
+                    {timeIdx < 24
+                      ? calculateMax(baseMax, hourlyFactor, timeIdx)
+                      : ""}
+                  </th>
+                </React.Fragment>
+              );
+            })}
           </tr>
         </thead>
         <tbody>
@@ -131,8 +169,12 @@ const PDLC = () => {
                 .slice(indexOfFirstTime, indexOfLastTime)
                 .map((time, idx) => (
                   <React.Fragment key={idx}>
-                    <td className="text-center">{time.min}</td>
-                    <td className="text-center">{time.max}</td>
+                    <td className="text-center">
+                      {calculateMin(baseMin, hourlyFactor, idx)}
+                    </td>
+                    <td className="text-center">
+                      {calculateMax(baseMax, hourlyFactor, idx)}
+                    </td>
                   </React.Fragment>
                 ))}
             </tr>
@@ -173,7 +215,7 @@ const PDLC = () => {
           <button
             className="join-item btn btn-outline"
             onClick={() => paginateTime(timePage - 1)}
-            disabled={timePage === 1}
+            disabled={timePage === 0}
           >
             &lt; Prev Hour
           </button>

@@ -1,7 +1,7 @@
 {
   "name": "holding-time-pwa",
   "type": "module",
-  "version": "0.0.0",
+  "version": "0.5.0",
   "private": true,
   "scripts": {
     "dev": "rimraf dev-dist && set DEBUG=vite-plugin-pwa&& set SW_DEV=true&& vite --force",
