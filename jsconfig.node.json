@@ -2,11 +2,16 @@
   "compilerOptions": {
     "composite": true,
     "module": "ESNext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true
   },
   "include": [
-    "vite.config.js"
+    "./vite.config.js",
+    "./src/**/*" // Include all files in the src directory and its subdirectories
   ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }

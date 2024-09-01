@@ -3,10 +3,9 @@ export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   daisyui: {
     themes: ["emerald"],
-    base: true,
-    styled: true,
-    utils: true,
-    themeRoot: ":root",
+  },
+  theme: {
+    extend: {},
   },
   plugins: [require("daisyui")],
 };
