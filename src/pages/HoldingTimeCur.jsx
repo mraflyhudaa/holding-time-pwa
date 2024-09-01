@@ -1,21 +1,26 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  Suspense,
+} from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import { debounce, trim } from "lodash";
-import AddProductModal from "../component/AddProductModal";
-import { formatTime } from "../utils/formatTime";
-import { sortItemsByLifeTime } from "../utils/sortItemsByLifetime";
-import { convertToMilliseconds } from "../utils/convertToMilliseconds";
-
+import AddProductModal from "../component/AddProductModal.jsx";
+import { sortItemsByLifeTime } from "../utils/sortItemsByLifetime.js";
+import { convertToMilliseconds } from "../utils/convertToMilliseconds.js";
 import {
   createItemHoldingTime,
   deleteItemHoldingTime,
   getHoldingTime,
   updateStatusHoldingTime,
-} from "../services/holdingTimeService";
-import { createWasteItem } from "../services/wasteService";
-import { getProductThresholds } from "../services/productConfigService";
-import ConfirmationModal from "../component/ConfirmationModal";
+} from "../services/holdingTimeService.js";
+import { createWasteItem } from "../services/wasteService.js";
+import { getProductThresholds } from "../services/productConfigService.js";
+import ConfirmationModal from "../component/ConfirmationModal.jsx";
+import { formatTime } from "../utils/formatTime.js";
 
 const HoldingTimeCur = () => {
   const [menuItems, setMenuItems] = useState([]);
@@ -85,7 +90,7 @@ const HoldingTimeCur = () => {
   const insertWasteItem = useCallback(async (item) => {
     try {
       const response = await createWasteItem(item);
-      console.log("Waste item inserted:", response);
+      // console.log("Waste item inserted:", response);
     } catch (error) {
       console.error("Error inserting waste item:", error);
     }
@@ -125,7 +130,7 @@ const HoldingTimeCur = () => {
       if (!searchTerm) {
         fetchMenuItems();
       }
-    }, 5000); // Poll every 5 seconds
+    }, 10000); // Poll every 5 seconds
 
     const timerInterval = setInterval(() => {
       updateLifeTimes();
@@ -181,14 +186,14 @@ const HoldingTimeCur = () => {
   );
 
   const handleDeleteModal = (id) => {
-    console.log("Deleting item:", id);
+    // console.log("Deleting item:", id);
     setItemDelete(id);
     document.getElementById("confirmation_modal").showModal();
   };
 
   const handleDelete = useCallback(async () => {
     setIsDeleting(true);
-    console.log("Deleting item:", itemDelete);
+    // console.log("Deleting item:", itemDelete);
     try {
       await deleteItemHoldingTime(itemDelete);
       setMenuItems((prevItems) =>
@@ -207,23 +212,6 @@ const HoldingTimeCur = () => {
     debouncedFetchMenuItems(searchTerm);
   }, [debouncedFetchMenuItems, searchTerm]);
 
-  // const getLifeTimeColor = useCallback(
-  //   (lifeTime, itemId) => {
-  //     const [hours, minutes, seconds] = lifeTime.split(":").map(Number);
-  //     const totalMinutes = hours * 60 + minutes + seconds / 60;
-
-  //     if (totalMinutes === 0) {
-  //       return `text-lg badge badge-lg badge-error ${
-  //         blinkStates[itemId] ? "opacity-100" : "opacity-0"
-  //       } transition-opacity duration-500`;
-  //     }
-  //     if (totalMinutes < 1) return "text-lg badge badge-lg badge-error";
-  //     if (totalMinutes < 20) return "text-lg badge badge-lg badge-warning";
-  //     return "text-lg badge badge-lg badge-primary";
-  //   },
-  //   [blinkStates]
-  // );
-
   const getLifeTimeColor = useCallback(
     (lifeTime, itemNo, itemId) => {
       const [hours, minutes, seconds] = lifeTime.split(":").map(Number);
@@ -234,16 +222,21 @@ const HoldingTimeCur = () => {
       const warningThreshold = parseInt(config.warning_threshold) || 3;
       const primaryThreshold = parseInt(config.primary_threshold) || 10;
 
+      let className;
       if (totalMinutes === 0) {
-        return `text-lg badge badge-lg badge-error ${
+        className = `text-lg badge badge-lg badge-error ${
           blinkStates[itemId] ? "opacity-100" : "opacity-0"
-        } transition-opacity duration-1000`;
+        } transition-opacity duration-500`;
+      } else if (totalMinutes <= expiredThreshold) {
+        className = "text-lg badge badge-lg badge-error";
+      } else if (totalMinutes <= warningThreshold) {
+        className = "text-lg badge badge-lg badge-warning";
+      } else {
+        className = "text-lg badge badge-lg badge-primary";
       }
-      if (totalMinutes <= expiredThreshold)
-        return "text-lg badge badge-lg badge-error";
-      if (totalMinutes <= warningThreshold)
-        return "text-lg badge badge-lg badge-warning";
-      return "text-lg badge badge-lg badge-primary";
+
+      // console.log("Life Time Color Class:", className);
+      return className;
     },
     [blinkStates, productConfigs]
   );
@@ -287,14 +280,14 @@ const HoldingTimeCur = () => {
       <table className="table w-full border table-zebra">
         <thead className="text-lg bg-slate-300 text-black">
           <tr>
-            <th>Item komposisi/ Menu</th>
-            <th>Display</th>
-            <th>Qty Porsi</th>
-            <th>Qty</th>
-            <th>UOM</th>
-            <th>Kelompok</th>
-            <th>Life Time</th>
-            <th>Tools</th>
+            <td>Item </td>
+            <td>Display</td>
+            <td>Qty Porsi</td>
+            <td>Qty</td>
+            <td>UOM</td>
+            <td>Kelompok</td>
+            <td>Life Time</td>
+            <td>Tools</td>
           </tr>
         </thead>
         <tbody className="text-lg">
@@ -332,7 +325,9 @@ const HoldingTimeCur = () => {
                     onClick={() => handleDeleteModal(item.id)}
                     disabled={isDeleting}
                   >
-                    {item.qty <= 0 ? "Delete" : "Waste"}
+                    {item.qty != 0 || item.qty_portion != 0
+                      ? "Waste"
+                      : "Delete"}
                   </button>
                 )}
               </td>
@@ -371,13 +366,15 @@ const HoldingTimeCur = () => {
           </button>
         </div>
       </div>
-      <AddProductModal addProduct={addProduct} isLoading={isLoading} />
-      <ConfirmationModal
-        title="Delete Item"
-        description="Are you sure you want to delete this item?"
-        handle={handleDelete}
-        buttonName="Delete"
-      />
+      <Suspense fallback={<div>Loading...</div>}>
+        <AddProductModal addProduct={addProduct} isLoading={isLoading} />
+        <ConfirmationModal
+          title="Delete Item"
+          description="Are you sure you want to delete this item?"
+          handle={handleDelete}
+          buttonName="Delete"
+        />
+      </Suspense>
     </div>
   );
 };

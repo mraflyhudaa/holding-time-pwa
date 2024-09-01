@@ -15,13 +15,15 @@ function App() {
         return "Products Configuration";
       case "/holding-time":
         return "Holding Time";
+      case "/order-menu-khusus":
+        return "Order Menu Khusus";
       default:
         return "Holding Time";
     }
   };
 
   return (
-    <main className="App" data-theme="emerald">
+    <main className="App">
       <Navbar title={getTitle()}>
         <Outlet />
       </Navbar>

@@ -10,7 +10,10 @@ const initializeAxios = async () => {
     timeout: 10000,
     headers: {
       "Content-Type": "application/json",
+      // "Accept-Encoding": "gzip, deflate",
+      // "Content-Encoding": "gzip",
     },
+    responseEncoding: "gzip",
   });
 
   return instance;

@@ -9,8 +9,8 @@
  */
 import React, { useState, useEffect } from "react";
 import AsyncSelect from "react-select/async";
-import { getProducts } from "../services/productService";
-import { getMasterDisplay } from "../services/masterDisplayService";
+import { getProducts } from "../services/productService.js";
+import { getMasterDisplay } from "../services/masterDisplayService.js";
 
 const AddProductModal = ({ addProduct, isLoading }) => {
   const [productData, setProductData] = useState({
@@ -52,7 +52,6 @@ const AddProductModal = ({ addProduct, isLoading }) => {
   const fetchDisplay = async () => {
     try {
       const response = await getMasterDisplay();
-      console.log("Display:", response);
       setDisplay(response);
       const arr = response.map((d) => ({
         value: d.id,
@@ -125,7 +124,6 @@ const AddProductModal = ({ addProduct, isLoading }) => {
       ...prevData,
       [name]: value,
     }));
-    console.log("productData", productData);
   };
 
   const calculateQty = () => {
@@ -203,18 +201,23 @@ const AddProductModal = ({ addProduct, isLoading }) => {
                 className="block mb-2 text-sm font-bold text-gray-700"
                 htmlFor="qty_portion"
               >
-                Quantity Portion
+                Quantity
               </label>
-              <input
-                type="text"
-                inputMode="numeric"
-                id="qty_portion"
-                name="qty_portion"
-                value={productData.qty_portion}
-                onChange={handleInputChange}
-                className="w-full max-w-full input input-bordered focus:input-secondary"
-                required
-              />
+              <div className="grid grid-cols-2 items-center space-x-4">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  id="qty_portion"
+                  name="qty_portion"
+                  value={productData.qty_portion}
+                  onChange={handleInputChange}
+                  className="w-full max-w-full input input-bordered focus:input-secondary"
+                  required
+                />
+                <label className="block text-sm font-bold text-gray-700 text-left">
+                  Porsi
+                </label>
+              </div>
             </div>
             <div className="mb-4 flex flex-row justify-between">
               <div>
@@ -229,7 +232,7 @@ const AddProductModal = ({ addProduct, isLoading }) => {
                   id="calculatedQty"
                   name="calculatedQty"
                   value={calculatedQty}
-                  className="w-full max-w-full input input-bordered focus:input-primary"
+                  className="w-full max-w-full input input-bordered focus:input-secondary"
                   readOnly
                 />
               </div>
@@ -246,7 +249,7 @@ const AddProductModal = ({ addProduct, isLoading }) => {
                   name="uom"
                   value={productData.uom}
                   onChange={handleInputChange}
-                  className="w-full max-w-full input input-bordered focus:input-primary"
+                  className="w-full max-w-full input input-bordered focus:input-secondary"
                   readOnly
                 />
               </div>
@@ -290,7 +293,7 @@ const AddProductModal = ({ addProduct, isLoading }) => {
                 id="lifeTime"
                 name="lifeTime"
                 value={productData.lifeTime}
-                className="w-full max-w-full input input-bordered focus:input-primary"
+                className="w-full max-w-full input input-bordered focus:input-secondary"
                 readOnly
               />
             </div>

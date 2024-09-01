@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   getProductThresholds,
   updateProductThresholds,
-} from "../services/productConfigService";
+} from "../services/productConfigService.js";
 import { debounce } from "lodash";
 import TimeField from "react-simple-timefield";
 

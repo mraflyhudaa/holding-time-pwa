@@ -54,9 +54,9 @@ function ReloadPrompt() {
               ></path>
             </svg>
             {offlineReady ? (
-              <span>App ready to work offline</span>
+              <span className="text-sm">App ready to work offline</span>
             ) : (
-              <span>
+              <span className="text-sm">
                 New content available, click on reload button to update.
               </span>
             )}
