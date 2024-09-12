@@ -130,7 +130,7 @@ const HoldingTimeCur = () => {
       if (!searchTerm) {
         fetchMenuItems();
       }
-    }, 10000); // Poll every 5 seconds
+    }, 3000); // Poll every 5 seconds
 
     const timerInterval = setInterval(() => {
       updateLifeTimes();
@@ -293,7 +293,7 @@ const HoldingTimeCur = () => {
         <tbody className="text-lg">
           {currentItems.length === 0 && (
             <tr>
-              <td colSpan="7" className="text-center">
+              <td colSpan="8" className="text-center">
                 No items found
               </td>
             </tr>
