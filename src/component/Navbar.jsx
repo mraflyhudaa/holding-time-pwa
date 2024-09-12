@@ -91,6 +91,9 @@ const Navbar = ({ title, children }) => {
             <li>
               <Link to={"/configuration"}>MASTER PRODUCTS</Link>
             </li>
+            <li>
+              <Link to={"/calculate-pdlc"}>CALCULATE PDLC</Link>
+            </li>
           </ul>
         </div>
       </div>
