@@ -54,3 +54,20 @@ export const updateProductThresholds = async (id, updateData) => {
     throw error;
   }
 };
+
+export const getDataProducts = async () => {
+  const api = await initializeAxios();
+  try {
+    const response = await api.get("product-thresholds/get-products");
+    return response;
+  } catch (error) {
+    if (error.response) {
+      console.error("Server Error:", error.response.data);
+    } else if (error.request) {
+      console.error("Network Error:", error.request);
+    } else {
+      console.error("Error:", error.message);
+    }
+    throw error;
+  }
+};

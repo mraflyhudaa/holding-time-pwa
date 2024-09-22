@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
+  getDataProducts,
   getProductThresholds,
   updateProductThresholds,
 } from "../services/productConfigService.js";
@@ -96,6 +97,17 @@ const ProductsConfiguration = () => {
     setSearchTerm(e.target.value);
   };
 
+  const handleGetData = async () => {
+    setIsLoading(true);
+    try {
+      const response = await getDataProducts();
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      setIsLoading(false);
+    }
+  };
+
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   const { currentItems, indexOfLastItem } = useMemo(() => {
@@ -109,20 +121,29 @@ const ProductsConfiguration = () => {
 
   return (
     <div className="px-4 pt-4">
-      <div className="flex mb-4">
-        <input
-          type="text"
-          placeholder="SEARCH"
-          className="w-full max-w-xs input input-bordered"
-          value={searchTerm}
-          onChange={handleSearch}
-        />
+      <div className="flex mb-4 justify-between">
+        <div className="flex flex-row space-x-2">
+          <input
+            type="text"
+            placeholder="SEARCH"
+            className="w-full max-w-xs input input-bordered"
+            value={searchTerm}
+            onChange={handleSearch}
+          />
+          <button
+            className="ml-2 btn btn-primary"
+            onClick={() => debouncedFetchProducts(searchTerm)}
+            disabled={isLoading}
+          >
+            {isLoading ? "Loading..." : "Submit"}
+          </button>
+        </div>
         <button
-          className="ml-2 btn btn-primary"
-          onClick={() => debouncedFetchProducts(searchTerm)}
+          className="btn btn-secondary"
+          onClick={() => handleGetData()}
           disabled={isLoading}
         >
-          {isLoading ? "Loading..." : "Submit"}
+          Get Data
         </button>
       </div>
       <table className="table w-full border table-zebra">

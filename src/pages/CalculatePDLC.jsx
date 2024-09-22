@@ -1,20 +1,25 @@
 import React, { useEffect, useState } from "react";
-import { calculatePDLC } from "../services/calculatePDLC";
+import { calculatePDLC } from "../services/pdlcService";
+import Modal from "../component/Modal";
 
 const CalculatePDLC = () => {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [result, setResult] = useState("");
+  const [shhb, setShhb] = useState("D04");
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Simulate progress bar loading
   useEffect(() => {
     let interval;
     if (isLoading && progress < 90) {
       interval = setInterval(() => {
-        setProgress((prev) => Math.min(prev + 10, 90)); // Progress up to 90%
-      }, 500); // Increment every 500ms
+        setProgress((prev) => {
+          const increment = Math.random() * 3 + 1;
+          return Math.min(prev + increment, 90);
+        });
+      }, 500);
     } else {
       clearInterval(interval);
     }
@@ -27,10 +32,11 @@ const CalculatePDLC = () => {
       setResult("");
       setProgress(0);
       try {
-        const data = await calculatePDLC(dateFrom, dateTo, setProgress);
+        const data = await calculatePDLC(shhb, dateFrom, dateTo, setProgress);
         console.log(data);
         // setResult(`The difference is ${data.diffInDays} days.`);
       } catch (error) {
+        document.getElementById("modal-component").showModal();
         setResult("An error occurred while calculating. Please try again.");
       } finally {
         setIsLoading(false);
@@ -43,6 +49,9 @@ const CalculatePDLC = () => {
 
   return (
     <div className="container mx-auto p-4">
+      <Modal isOpen={isModalOpen} title="Error!">
+        <p className="py-4">{result}</p>
+      </Modal>
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
           <h2 className="card-title"></h2>
@@ -79,19 +88,22 @@ const CalculatePDLC = () => {
           </div>
           {isLoading && (
             <div className="mt-4">
-              <progress
-                className="progress progress-primary w-full transition-all duration-700 ease-in-out"
-                value={progress}
-                max="100"
-              ></progress>
-              <p className="text-center mt-2">Calculating... {progress}%</p>
+              <div className="w-full bg-gray-200 rounded-full h-2.5">
+                <div
+                  className="bg-blue-600 h-2.5 rounded-full transition-all duration-300 ease-out"
+                  style={{ width: `${progress}%` }}
+                ></div>
+              </div>
+              <p className="text-center mt-2">
+                Calculating... {Math.round(progress)}%
+              </p>
             </div>
           )}
-          {result && !isLoading && (
+          {/* {result && !isLoading && (
             <div className="mt-4 text-center">
               <p>{result}</p>
             </div>
-          )}
+          )} */}
         </div>
       </div>
     </div>
