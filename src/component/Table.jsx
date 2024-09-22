@@ -1,71 +1,91 @@
 import React from "react";
 
-const Table = ({ data }) => {
-  console.log(data);
-  const allHours = Array.from(
-    { length: 24 },
-    (_, i) => `${i.toString().padStart(2, "0")}:00`
-  );
-
+const Table = ({
+  data,
+  lowQuantityItems,
+  indexOfFirstTime,
+  indexOfLastTime,
+}) => {
   const getClassification = (hour) => {
-    const item = data[0]?.hourly_classification[hour];
+    const item = data[0]?.times[hour];
     return item ? item.classification : "";
   };
 
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full bg-white border-collapse">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="border p-2">NO</th>
-            <th className="border p-2">NAMA PRODUK</th>
-            <th className="border p-2">Unit</th>
-            <th className="border p-2">QTY PER HARI</th>
-            {allHours.map((hour) => (
-              <th key={hour} className="border p-2" colSpan="2">
-                {hour}
-                <br />
-                <span className="text-xs font-normal">
-                  {getClassification(hour)}
-                </span>
-              </th>
-            ))}
-          </tr>
-          <tr className="bg-gray-50">
-            <th className="border p-2" colSpan="4"></th>
-            {allHours.map((hour) => (
-              <React.Fragment key={hour}>
-                <th className="border p-2 text-xs">min</th>
-                <th className="border p-2 text-xs">max</th>
-              </React.Fragment>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((item) => (
-            <tr
-              key={item.no}
-              className={item.no % 2 === 0 ? "bg-gray-50" : "bg-white"}
-            >
-              <td className="border p-2">{item.no}</td>
-              <td className="border p-2">{item.nmitem}</td>
-              <td className="border p-2">{item.unit}</td>
-              <td className="border p-2">{item.calculated_qty}</td>
-              {allHours.map((hour) => (
-                <React.Fragment key={hour}>
-                  <td className="border p-2">
-                    {item.hourly_classification[hour]?.min || "-"}
-                  </td>
-                  <td className="border p-2">
-                    {item.hourly_classification[hour]?.max || "-"}
-                  </td>
-                </React.Fragment>
-              ))}
+    <>
+      <style jsx="true">{`
+        @keyframes longPulse {
+          0%,
+          100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.1;
+          }
+        }
+        .animate-long-pulse {
+          animation: longPulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+      `}</style>
+      <div className="overflow-x-auto">
+        <table className="table w-full mb-4 text-lg border table-zebra">
+          <thead className="text-lg bg-blue-300">
+            <tr>
+              <th>Item komposisi/ Menu</th>
+              <th>Unit</th>
+              <th>Qty</th>
+              {Array.from({ length: indexOfLastTime - indexOfFirstTime }).map(
+                (_, i) => {
+                  const timeIdx = indexOfFirstTime + i;
+                  return (
+                    <th key={timeIdx} colSpan={2} className="text-center">
+                      {timeIdx < 24 ? data[0].times[timeIdx].time : ""}
+                      <br />
+                      {timeIdx < 24 ? getClassification(timeIdx) : ""}
+                    </th>
+                  );
+                }
+              )}
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+            <tr>
+              <th></th>
+              <th></th>
+              <th></th>
+              {Array.from({ length: indexOfLastTime - indexOfFirstTime }).map(
+                (_, i) => (
+                  <React.Fragment key={i}>
+                    <th className="text-center">Min</th>
+                    <th className="text-center">Max</th>
+                  </React.Fragment>
+                )
+              )}
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((item, index) => (
+              <tr
+                key={index}
+                className={
+                  lowQuantityItems[item.noitem] ? "animate-long-pulse " : ""
+                }
+              >
+                <td>{item.nmitem}</td>
+                <td>{item.unit}</td>
+                <td>{Math.trunc(item.calculated_qty)}</td>
+                {item.times
+                  .slice(indexOfFirstTime, indexOfLastTime)
+                  .map((time, idx) => (
+                    <React.Fragment key={idx}>
+                      <td className="text-center">{Math.trunc(time.min)}</td>
+                      <td className="text-center">{Math.trunc(time.max)}</td>
+                    </React.Fragment>
+                  ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 };
 

@@ -7,7 +7,7 @@ const initializeAxios = async () => {
 
   const instance = axios.create({
     baseURL: config[mode].baseURL,
-    timeout: 10000,
+    timeout: 100000,
     headers: {
       "Content-Type": "application/json",
       // "Accept-Encoding": "gzip, deflate",

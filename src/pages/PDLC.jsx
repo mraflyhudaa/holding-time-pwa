@@ -1,30 +1,48 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { getPDLCCalc } from "../services/pdlcService";
 import { debounce } from "lodash";
 import Table from "../component/Table";
+import { sumQtyItemHoldingTime } from "../services/holdingTimeService";
+import { getPDLCCalc } from "../services/pdlcService";
 
 const PDLC = () => {
-  // const [menuItems, setMenuItems] = useState(initialMenuItems);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [timePage, setTimePage] = useState(0);
   const [pdlcItems, setPdlcItems] = useState([]);
+  const [lowQuantityItems, setLowQuantityItems] = useState({});
 
   const itemsPerPage = 5;
   const timesPerPage = 4;
+  const qtyThreshold = 4;
 
   const fetchItemsPdlc = async (search = "") => {
     setIsLoading(true);
     try {
       const response = await getPDLCCalc(search);
       setPdlcItems(response.data);
-      console.log("res", response.data);
       setIsLoading(false);
     } catch (error) {
       console.error("error", error);
       setIsLoading(false);
+      isError(true);
+    }
+  };
+
+  const fetchLowQuantities = async () => {
+    try {
+      const quantities = await sumQtyItemHoldingTime();
+      const lowItems = {};
+      quantities.data.forEach((item) => {
+        // console.log(item);
+        if (item.total_qty < qtyThreshold) {
+          lowItems[item.noitem] = true;
+        }
+      });
+      setLowQuantityItems(lowItems);
+    } catch (error) {
+      console.error("Failed to fetch item quantities:", error);
     }
   };
 
@@ -32,6 +50,10 @@ const PDLC = () => {
     if (!searchTerm) {
       fetchItemsPdlc();
     }
+    fetchLowQuantities();
+
+    const intervalId = setInterval(fetchLowQuantities, 3000);
+    return () => clearInterval(intervalId);
   }, []);
 
   const debouncedFetchItems = useMemo(
@@ -39,39 +61,45 @@ const PDLC = () => {
     [fetchItemsPdlc]
   );
 
-  const getCurrentHour = () => {
-    const now = new Date();
-    return now.getHours();
-  };
-
-  // useEffect(() => {
-  //   setTimePage(getCurrentHour());
-  // }, []);
-
   const handleSearch = useCallback(() => {
     debouncedFetchItems(searchTerm);
   }, [debouncedFetchItems, searchTerm]);
-
-  const indexOfLastTime = timePage + timesPerPage;
-  const indexOfFirstTime = timePage;
-  const indexOfLastPage = pdlcItems[0]?.times.length;
-  console.log(indexOfLastPage);
 
   const paginate = useCallback((pageNumber) => setCurrentPage(pageNumber), []);
 
   const paginateTime = (pageNumber) => setTimePage(pageNumber);
 
+  const sortedItems = useMemo(() => {
+    return [...pdlcItems].sort((a, b) => {
+      if (lowQuantityItems[a.noitem] && !lowQuantityItems[b.noitem]) return -1;
+      if (!lowQuantityItems[a.noitem] && lowQuantityItems[b.noitem]) return 1;
+      return 0;
+    });
+  }, [pdlcItems, lowQuantityItems]);
+
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = pdlcItems.slice(indexOfFirstItem, indexOfLastItem);
+  const currentItems = sortedItems.slice(indexOfFirstItem, indexOfLastItem);
 
-  // console.log(currentItems);
+  const indexOfLastTime = timePage + timesPerPage;
+  const indexOfFirstTime = timePage;
+  const indexOfLastPage = pdlcItems[0]?.times.length || 0;
 
   if (isLoading) {
     return (
       <div className="px-4 pt-4">
         <div className="flex mb-4 justify-center items-center">
           <span className="loading loading-spinner loading-lg"></span>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="px-4 pt-4">
+        <div className="flex mb-4 justify-center items-center">
+          <span className="">Error Fetching Data</span>
         </div>
       </div>
     );
@@ -94,71 +122,16 @@ const PDLC = () => {
         >
           Submit
         </button>
-        <span className="ml-auto"></span>
       </div>
-      {isLoading ? (
-        "Fetching data"
-      ) : (
-        // <Table data={pdlcItems} />
-        <table className="table w-full mb-4 text-lg border table-zebra">
-          <thead className="text-lg bg-blue-300">
-            <tr>
-              <th>Item komposisi/ Menu</th>
-              <th>Unit</th>
-              <th>Qty</th>
-              {Array.from({ length: timesPerPage }).map((_, i) => {
-                const timeIdx = indexOfFirstTime + i;
-                return (
-                  <th key={timeIdx} colSpan={2} className="text-center">
-                    {timeIdx < 24 ? currentItems[0].times[timeIdx].time : ""}
-                    <br />
-                    {timeIdx < 24
-                      ? currentItems[0].times[timeIdx].classification
-                      : ""}
-                  </th>
-                );
-              })}
-            </tr>
-            <tr>
-              <th></th>
-              <th></th>
-              <th></th>
-              {Array.from({ length: timesPerPage }).map((_, i) => {
-                const timeIdx = indexOfFirstTime + i;
-                return (
-                  <React.Fragment key={timeIdx}>
-                    <th key={timeIdx + "min"} className="text-center">
-                      Min
-                    </th>
-                    <th key={timeIdx + "max"} className="text-center">
-                      Max
-                    </th>
-                  </React.Fragment>
-                );
-              })}
-            </tr>
-          </thead>
-          <tbody>
-            {currentItems.map((item, index) => (
-              <tr key={index}>
-                <td>{item.nmitem}</td>
-                <td>{item.unit}</td>
-                <td>{Math.trunc(item.calculated_qty)}</td>
-                {item.times
-                  .slice(indexOfFirstTime, indexOfLastTime)
-                  .map((time, idx) => (
-                    <React.Fragment key={idx}>
-                      <td className="text-center">{Math.trunc(time.min)}</td>
-                      <td className="text-center">{Math.trunc(time.max)}</td>
-                    </React.Fragment>
-                  ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
 
-      <div className="flex justify-between">
+      <Table
+        data={currentItems}
+        lowQuantityItems={lowQuantityItems}
+        indexOfFirstTime={indexOfFirstTime}
+        indexOfLastTime={indexOfLastTime}
+      />
+
+      <div className="flex justify-between mt-4">
         <div className="grid grid-cols-4 join">
           <button
             className="join-item btn btn-outline"
@@ -176,14 +149,16 @@ const PDLC = () => {
           <button
             className="join-item btn btn-outline"
             onClick={() => paginate(currentPage + 1)}
-            disabled={indexOfLastItem >= pdlcItems.length}
+            disabled={indexOfLastItem >= sortedItems.length}
           >
             Next &gt;
           </button>
           <button
             className="join-item btn btn-outline"
-            onClick={() => paginate(Math.ceil(pdlcItems.length / itemsPerPage))}
-            disabled={indexOfLastItem >= pdlcItems.length}
+            onClick={() =>
+              paginate(Math.ceil(sortedItems.length / itemsPerPage))
+            }
+            disabled={indexOfLastItem >= sortedItems.length}
           >
             Last &gt;&gt;
           </button>
