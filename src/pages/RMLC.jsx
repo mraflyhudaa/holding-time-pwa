@@ -1,189 +1,140 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { debounce } from "lodash";
+import Table from "../component/Table";
+import { sumQtyItemHoldingTime } from "../services/holdingTimeService";
+import { getRMLCCalc } from "../services/rmlcService";
 import { Link } from "react-router-dom";
-
-const generateFullDayTimes = () => {
-  const statuses = ["LOW", "MEDIUM", "HIGH", "SUPER"];
-  return Array.from({ length: 24 }, (_, i) => ({
-    time: `${String(i).padStart(2, "0")}:00`,
-    status: statuses[Math.floor(Math.random() * statuses.length)],
-    min: Math.floor(Math.random() * 10),
-    max: 10 + Math.floor(Math.random() * 10),
-  }));
-};
-
-const initialMenuItems = [
-  {
-    name: "SIMPLE SET TERIYAKI 1 VALUE",
-    unit: "box",
-    qty: 50,
-    times: generateFullDayTimes(),
-  },
-  {
-    name: "SIMPLE SET TERIYAKI 2 VALUE",
-    unit: "box",
-    qty: 28,
-    times: generateFullDayTimes(),
-  },
-  {
-    name: "PAKET A",
-    unit: "box",
-    qty: 16,
-    times: generateFullDayTimes(),
-  },
-  {
-    name: "PAKET B",
-    unit: "box",
-    qty: 21,
-    times: generateFullDayTimes(),
-  },
-  {
-    name: "NEW BENTO SPECIAL 1",
-    unit: "box",
-    qty: 4,
-    times: generateFullDayTimes(),
-  },
-  {
-    name: "NEW BENTO SPECIAL 2",
-    unit: "box",
-    qty: 7,
-    times: generateFullDayTimes(),
-  },
-  {
-    name: "HOKA HEMAT RB 1",
-    unit: "box",
-    qty: 27,
-    times: generateFullDayTimes(),
-  },
-];
-
-const itemsPerPage = 5;
-const timesPerPage = 3;
+import TableRMLC from "../component/TableRMLC";
 
 const RMLC = () => {
-  const [menuItems, setMenuItems] = useState(initialMenuItems);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [timePage, setTimePage] = useState(0);
+  const [rmlcItems, setRmlcItems] = useState([]);
+  const [lowQuantityItems, setLowQuantityItems] = useState({});
+  const [time, setTime] = useState({});
+  const [msg, setMsg] = useState(null);
 
   const itemsPerPage = 5;
-  const timesPerPage = 3;
+  const timesPerPage = 4;
 
-  const baseMin = 4;
-  const baseMax = 10;
-  const hourlyFactor = 1;
-
-  // Define your peak hours (e.g., from 12 PM to 2 PM)
-  const peakHours = [12, 13, 14];
-
-  // Peak multiplier (e.g., increase by 50% during peak hours)
-  const peakMultiplier = 1.5;
-
-  const calculateMin = (baseMin, hourlyFactor, hourIndex) => {
-    const isPeakHour = peakHours.includes(hourIndex);
-    const multiplier = isPeakHour ? peakMultiplier : 1;
-    return baseMin + hourlyFactor * hourIndex * multiplier;
-  };
-
-  const calculateMax = (baseMax, hourlyFactor, hourIndex) => {
-    const isPeakHour = peakHours.includes(hourIndex);
-    const multiplier = isPeakHour ? peakMultiplier : 1;
-    return baseMax + hourlyFactor * hourIndex * multiplier;
-  };
-
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = menuItems.slice(indexOfFirstItem, indexOfLastItem);
-
-  const getCurrentHour = () => {
-    const now = new Date();
-    return now.getHours();
+  const fetchItemsRMLC = async (search = "") => {
+    setMsg(null);
+    setIsLoading(true);
+    try {
+      const response = await getRMLCCalc(search);
+      setRmlcItems(response.data);
+      setTime(response.today);
+      setIsLoading(false);
+    } catch (error) {
+      console.error("error", error.response.data);
+      if (error.response.data.status == "404") {
+        setMsg("RMLC data not calculated today, please click button below");
+      }
+      setIsLoading(false);
+      setIsError(true);
+    }
   };
 
   useEffect(() => {
-    setTimePage(getCurrentHour());
+    if (!searchTerm) {
+      fetchItemsRMLC();
+    }
   }, []);
+
+  const debouncedFetchItems = useMemo(
+    () => debounce(fetchItemsRMLC, 300),
+    [fetchItemsRMLC]
+  );
+
+  const handleSearch = useCallback(() => {
+    debouncedFetchItems(searchTerm);
+  }, [debouncedFetchItems, searchTerm]);
+
+  const paginate = useCallback((pageNumber) => setCurrentPage(pageNumber), []);
+
+  const paginateTime = (pageNumber) => setTimePage(pageNumber);
+
+  const sortedItems = useMemo(() => {
+    return [...rmlcItems].sort((a, b) => {
+      if (lowQuantityItems[a.noitem] && !lowQuantityItems[b.noitem]) return -1;
+      if (!lowQuantityItems[a.noitem] && lowQuantityItems[b.noitem]) return 1;
+      return 0;
+    });
+  }, [rmlcItems, lowQuantityItems]);
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = sortedItems.slice(indexOfFirstItem, indexOfLastItem);
 
   const indexOfLastTime = timePage + timesPerPage;
   const indexOfFirstTime = timePage;
+  const indexOfLastPage = rmlcItems[0]?.times.length || 0;
 
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
-  const paginateTime = (pageNumber) => setTimePage(pageNumber);
+  if (isLoading) {
+    return (
+      <div className="px-4 pt-4">
+        <div className="flex mb-4 justify-center items-center">
+          <span className="loading loading-spinner loading-lg"></span>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="px-4 pt-4">
+        <div className="flex mb-4 justify-center items-center">
+          {msg == null ? (
+            <span className="">Error Fetching Data</span>
+          ) : (
+            <div className="flex flex-col items-center space-y-2">
+              <span className="">{msg}</span>
+              <Link className="btn btn-accent" to={"/calculate-rmlc"}>
+                CALCULATE RMLC
+              </Link>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="px-4 pt-4">
-      <div className="flex justify-between mb-4">
-        <input
-          type="text"
-          placeholder="SEARCH"
-          className="w-full max-w-xs input input-bordered"
-        />
-        <button className="ml-2 btn btn-primary">Submit</button>
-        <span className="ml-auto"></span>
+      <div className="flex justify-between mb-4 items-center">
+        <div className="flex">
+          <input
+            type="text"
+            placeholder="SEARCH"
+            className="w-full max-w-xs input input-bordered"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <button
+            className="ml-2 btn btn-primary"
+            onClick={handleSearch}
+            disabled={isLoading}
+          >
+            Submit
+          </button>
+        </div>
+        {time && (
+          <span className="badge text-lg badge-accent p-4">{`${time.day}, ${time.date} (${time.type})`}</span>
+        )}
       </div>
-      <table className="table w-full mb-4 text-lg border table-zebra">
-        <thead className="text-lg">
-          <tr>
-            <th>Item komposisi/ Menu</th>
-            <th>Unit</th>
-            <th>Qty</th>
-            {Array.from({ length: timesPerPage }).map((_, i) => {
-              const timeIdx = indexOfFirstTime + i;
-              return (
-                <th key={timeIdx} colSpan={2} className="text-center">
-                  {timeIdx < 24 ? currentItems[0].times[timeIdx].time : ""}
-                  <br />
-                  {timeIdx < 24 ? currentItems[0].times[timeIdx].status : ""}
-                </th>
-              );
-            })}
-          </tr>
-          <tr>
-            <th></th>
-            <th></th>
-            <th></th>
-            {Array.from({ length: timesPerPage }).map((_, i) => {
-              const timeIdx = indexOfFirstTime + i;
-              return (
-                <React.Fragment key={timeIdx}>
-                  <th key={timeIdx + "min"} className="text-center">
-                    {/* {timeIdx < 24
-                      ? calculateMin(baseMin, hourlyFactor, timeIdx)
-                      : ""} */}
-                    MIN
-                  </th>
-                  <th key={timeIdx + "max"} className="text-center">
-                    {/* {timeIdx < 24
-                      ? calculateMax(baseMax, hourlyFactor, timeIdx)
-                      : ""} */}
-                    MAX
-                  </th>
-                </React.Fragment>
-              );
-            })}
-          </tr>
-        </thead>
-        <tbody>
-          {currentItems.map((item, index) => (
-            <tr key={index}>
-              <td>{item.name}</td>
-              <td>{item.unit}</td>
-              <td>{item.qty}</td>
-              {item.times
-                .slice(indexOfFirstTime, indexOfLastTime)
-                .map((time, idx) => (
-                  <React.Fragment key={idx}>
-                    <td className="text-center">
-                      {calculateMin(baseMin, hourlyFactor, idx)}
-                    </td>
-                    <td className="text-center">
-                      {calculateMax(baseMax, hourlyFactor, idx)}
-                    </td>
-                  </React.Fragment>
-                ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <div className="flex justify-between">
+      {currentItems && (
+        <TableRMLC
+          data={currentItems}
+          lowQuantityItems={lowQuantityItems}
+          indexOfFirstTime={indexOfFirstTime}
+          indexOfLastTime={indexOfLastTime}
+        />
+      )}
+
+      <div className="flex justify-between mt-4">
         <div className="grid grid-cols-4 join">
           <button
             className="join-item btn btn-outline"
@@ -201,14 +152,16 @@ const RMLC = () => {
           <button
             className="join-item btn btn-outline"
             onClick={() => paginate(currentPage + 1)}
-            disabled={indexOfLastItem >= menuItems.length}
+            disabled={indexOfLastItem >= sortedItems.length}
           >
             Next &gt;
           </button>
           <button
             className="join-item btn btn-outline"
-            onClick={() => paginate(Math.ceil(menuItems.length / itemsPerPage))}
-            disabled={indexOfLastItem >= menuItems.length}
+            onClick={() =>
+              paginate(Math.ceil(sortedItems.length / itemsPerPage))
+            }
+            disabled={indexOfLastItem >= sortedItems.length}
           >
             Last &gt;&gt;
           </button>
@@ -224,7 +177,7 @@ const RMLC = () => {
           <button
             className="join-item btn btn-outline"
             onClick={() => paginateTime(timePage + 1)}
-            disabled={indexOfLastTime >= 24}
+            disabled={indexOfLastTime >= indexOfLastPage}
           >
             Next Hour &gt;
           </button>
