@@ -18,4 +18,5 @@ const initializeAxios = async () => {
 
   return instance;
 };
+
 export default initializeAxios;

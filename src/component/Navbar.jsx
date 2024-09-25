@@ -8,12 +8,26 @@
  * @returns {JSX.Element} The rendered Navbar component.
  */
 import { Link } from "react-router-dom";
+import { useRef } from "react";
 
 const Navbar = ({ title, children }) => {
+  const drawerCheckboxRef = useRef(null);
+
+  const closeDrawer = () => {
+    if (drawerCheckboxRef.current) {
+      drawerCheckboxRef.current.checked = false;
+    }
+  };
+
   return (
     <>
       <div className="drawer">
-        <input id="my-drawer-3" type="checkbox" className="drawer-toggle" />
+        <input
+          id="my-drawer-3"
+          type="checkbox"
+          className="drawer-toggle"
+          ref={drawerCheckboxRef}
+        />
         <div className="drawer-content flex flex-col">
           {/* Navbar */}
           <div className="navbar bg-base-300 w-full z-50">
@@ -67,16 +81,20 @@ const Navbar = ({ title, children }) => {
 
           {children}
           <div className="flex justify-between p-4">
-            <Link className="btn btn-primary" to={"/"}>
+            <Link className="btn btn-primary" to={"/"} onClick={closeDrawer}>
               DISPLAY HOLDING TIME
             </Link>
-            <Link className="btn btn-info" to={"/pdlc"}>
+            <Link className="btn btn-info" to={"/pdlc"} onClick={closeDrawer}>
               PDLC
             </Link>
-            <Link className="btn btn-info" to={"/rmlc"}>
+            <Link className="btn btn-accent" to={"/rmlc"} onClick={closeDrawer}>
               RMLC
             </Link>
-            <Link className="btn btn-secondary" to={"/order-menu-khusus"}>
+            <Link
+              className="btn btn-secondary"
+              to={"/order-menu-khusus"}
+              onClick={closeDrawer}
+            >
               ORDER MENU KHUSUS
             </Link>
           </div>
@@ -89,10 +107,24 @@ const Navbar = ({ title, children }) => {
           ></label>
           <ul className="menu bg-base-200 min-h-full w-80 px-4 py-20">
             <li>
-              <Link to={"/configuration"}>MASTER PRODUCTS</Link>
+              <Link to={"/calculate-pdlc"} onClick={closeDrawer}>
+                CALCULATE PDLC
+              </Link>
             </li>
             <li>
-              <Link to={"/calculate-pdlc"}>CALCULATE PDLC</Link>
+              <Link to={"/calculate-rmlc"} onClick={closeDrawer}>
+                CALCULATE RMLC
+              </Link>
+            </li>
+            <li>
+              <Link to={"/items-configuration"} onClick={closeDrawer}>
+                ITEM CONFIGURATION
+              </Link>
+            </li>
+            <li>
+              <Link to={"/items-configuration"} onClick={closeDrawer}>
+                PRODUCT CONFIGURATION
+              </Link>
             </li>
           </ul>
         </div>

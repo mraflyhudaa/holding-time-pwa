@@ -29,7 +29,7 @@ const HoldingTimeCur = () => {
   const [blinkStates, setBlinkStates] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [productConfigs, setProductConfigs] = useState({});
+  const [productConfigs, setProductConfigs] = useState([]);
   const [itemDelete, setItemDelete] = useState(null);
   const itemsPerPage = 5;
 
@@ -251,6 +251,16 @@ const HoldingTimeCur = () => {
       indexOfLastItem,
     };
   }, [currentPage, menuItems]);
+
+  if (isLoading) {
+    return (
+      <div className="px-4 pt-4">
+        <div className="flex mb-4 justify-center items-center">
+          <span className="loading loading-spinner loading-lg"></span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="px-4 pt-4">

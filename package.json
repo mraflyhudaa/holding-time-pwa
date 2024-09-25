@@ -58,7 +58,8 @@
     "react-router-config": "^5.1.1",
     "react-router-dom": "^6.19.0",
     "react-select": "^5.8.0",
-    "react-simple-timefield": "^3.3.1"
+    "react-simple-timefield": "^3.3.1",
+    "swr": "^2.2.5"
   },
   "devDependencies": {
     "@playwright/test": "^1.44.0",

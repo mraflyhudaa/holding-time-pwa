@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
-  getDataPLU,
+  getDataProducts,
   getProductThresholds,
   updateProductThresholds,
 } from "../services/productConfigService.js";
 import { debounce } from "lodash";
 import TimeField from "react-simple-timefield";
-import { getProducts, updateProduct } from "../services/productService.js";
 
-const ProductsConfiguration = () => {
+const ItemsConfiguration = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [products, setProducts] = useState([]);
@@ -18,9 +17,10 @@ const ProductsConfiguration = () => {
   const [editFormData, setEditFormData] = useState({
     noitem: "",
     name: "",
-    max_cooking_time: "",
-    type: "",
-    active: "",
+    max_holding_time: "",
+    expired_threshold: "",
+    warning_threshold: "",
+    primary_threshold: "",
   });
   const [originalData, setOriginalData] = useState({});
   const itemsPerPage = 5;
@@ -30,8 +30,8 @@ const ProductsConfiguration = () => {
       debounce(async (term) => {
         setIsLoading(true);
         try {
-          const products = await getProducts(term);
-          setProducts(products.data);
+          const products = await getProductThresholds(term);
+          setProducts(products);
         } catch (error) {
           console.error("Error fetching products:", error);
         } finally {
@@ -50,12 +50,13 @@ const ProductsConfiguration = () => {
     setEditFormData({
       noitem: product.noitem,
       name: product.name,
-      max_cooking_time: product.max_cooking_time,
-      type: product.type,
-      active: product.active,
+      max_holding_time: product.max_holding_time,
+      expired_threshold: product.expired_threshold,
+      warning_threshold: product.warning_threshold,
+      primary_threshold: product.primary_threshold,
     });
     setOriginalData(product);
-    document.getElementById("edit_product_modal").showModal();
+    document.getElementById("edit_modal").showModal();
   };
 
   const handleEditFormChange = (e) => {
@@ -76,15 +77,14 @@ const ProductsConfiguration = () => {
     }, {});
 
     if (Object.keys(changes).length === 0) {
-      console.log(selectedProduct);
-      document.getElementById("edit_product_modal").close();
+      document.getElementById("edit_modal").close();
       setIsLoading(false);
       return;
     }
 
     try {
-      await updateProduct(selectedProduct.id, changes);
-      document.getElementById("edit_product_modal").close();
+      await updateProductThresholds(selectedProduct.id, changes);
+      document.getElementById("edit_modal").close();
       debouncedFetchProducts(searchTerm); // Refresh data
     } catch (error) {
       console.error("Error updating product:", error);
@@ -100,7 +100,7 @@ const ProductsConfiguration = () => {
   const handleGetData = async () => {
     setIsLoading(true);
     try {
-      const response = await getDataPLU();
+      const response = await getDataProducts();
       setIsLoading(false);
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -151,8 +151,10 @@ const ProductsConfiguration = () => {
           <tr>
             <th>No.</th>
             <th>Name</th>
-            <th>Max Cooking time</th>
-            <th>Type</th>
+            <th>Max Lifetime</th>
+            <th>Red</th>
+            <th>Yellow</th>
+            {/* <th>Green</th> */}
             <th>Action</th>
           </tr>
         </thead>
@@ -165,11 +167,13 @@ const ProductsConfiguration = () => {
             </tr>
           )}
           {currentItems.map((product, index) => (
-            <tr key={index} className="text-lg">
+            <tr key={index}>
               <td>{product.noitem}</td>
               <td>{product.name}</td>
-              <td>{product.max_cooking_time}</td>
-              <td>{product.type != "normal" ? "Special" : "Normal"}</td>
+              <td>{product.max_holding_time}</td>
+              <td>{product.expired_threshold}</td>
+              <td>{product.warning_threshold}</td>
+              {/* <td>{product.primary_threshold}</td> */}
               <td>
                 <div className="dropdown dropdown-end">
                   <div
@@ -239,10 +243,7 @@ const ProductsConfiguration = () => {
       </div>
 
       {/* Edit Modal */}
-      <dialog
-        id="edit_product_modal"
-        className="modal modal-bottom sm:modal-middle"
-      >
+      <dialog id="edit_modal" className="modal modal-bottom sm:modal-middle">
         <div className="modal-box">
           <h3 className="font-bold text-lg">Edit Product</h3>
           <div className="py-4">
@@ -274,17 +275,24 @@ const ProductsConfiguration = () => {
             </div>
             <div className="form-control">
               <label className="label">
-                <span className="label-text">Max Cooking Time</span>
+                <span className="label-text">Max Lifetime</span>
               </label>
+              {/* <input
+                type="text"
+                name="max_holding_time"
+                value={editFormData.max_holding_time}
+                onChange={handleEditFormChange}
+                className="input input-bordered"
+              /> */}
               <TimeField
-                name="max_cooking_time"
-                value={editFormData.max_cooking_time}
+                name="max_holding_time"
+                value={editFormData.max_holding_time}
                 onChange={handleEditFormChange}
                 colon=":"
                 showSeconds
                 input={
                   <input
-                    name="max_cooking_time"
+                    name="max_holding_time"
                     type="text"
                     className="input input-bordered"
                   />
@@ -293,21 +301,40 @@ const ProductsConfiguration = () => {
             </div>
             <div className="form-control">
               <label className="label">
-                <span className="label-text">Type</span>
+                <span className="label-text">Low</span>
               </label>
-              <select
-                name="type"
-                className="select select-bordered w-full max-w-full"
-                value={editFormData.type}
+              <input
+                type="text"
+                name="expired_threshold"
+                value={editFormData.expired_threshold}
                 onChange={handleEditFormChange}
-              >
-                <option disabled value="">
-                  Choose one
-                </option>
-                <option value="normal">Normal</option>
-                <option value="special">Khusus</option>
-              </select>
+                className="input input-bordered"
+              />
             </div>
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text">Medium</span>
+              </label>
+              <input
+                type="text"
+                name="warning_threshold"
+                value={editFormData.warning_threshold}
+                onChange={handleEditFormChange}
+                className="input input-bordered"
+              />
+            </div>
+            {/* <div className="form-control">
+              <label className="label">
+                <span className="label-text">High</span>
+              </label>
+              <input
+                type="text"
+                name="primary_threshold"
+                value={editFormData.primary_threshold}
+                onChange={handleEditFormChange}
+                className="input input-bordered"
+              />
+            </div> */}
           </div>
           <div className="modal-action">
             <button className="btn btn-primary" onClick={handleConfirmEdit}>
@@ -323,4 +350,4 @@ const ProductsConfiguration = () => {
   );
 };
 
-export default ProductsConfiguration;
+export default ItemsConfiguration;

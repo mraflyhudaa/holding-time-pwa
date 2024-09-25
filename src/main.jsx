@@ -4,10 +4,12 @@ import "./index.css";
 import App from "./App";
 import HoldingTimeCur from "./pages/HoldingTimeCur";
 import PDLC from "./pages/PDLC";
-import ProductsConfiguration from "./pages/ProductsConfiguration";
 import OrderMenuKhusus from "./pages/OrderMenuKhusus";
 import RMLC from "./pages/RMLC";
 import CalculatePDLC from "./pages/CalculatePDLC";
+import ItemsConfiguration from "./pages/ItemsConfiguration";
+import CalculateRMLC from "./pages/CalculateRMLC";
+import ProductsConfiguration from "./pages/ProductsConfiguration";
 
 createRoot(document.getElementById("app")).render(
   <BrowserRouter>
@@ -17,9 +19,14 @@ createRoot(document.getElementById("app")).render(
         <Route path="/holding-time" element={<HoldingTimeCur />} />
         <Route path="/pdlc" element={<PDLC />} />
         <Route path="/rmlc" element={<RMLC />} />
-        <Route path="/configuration" element={<ProductsConfiguration />} />
+        <Route path="/items-configuration" element={<ItemsConfiguration />} />
+        <Route
+          path="/products-configuration"
+          element={<ProductsConfiguration />}
+        />
         <Route path="/order-menu-khusus" element={<OrderMenuKhusus />} />
         <Route path="/calculate-pdlc" element={<CalculatePDLC />} />
+        <Route path="/calculate-rmlc" element={<CalculateRMLC />} />
       </Route>
       {/* <Route path="*" element={<h1>Not Found</h1>} /> */}
     </Routes>

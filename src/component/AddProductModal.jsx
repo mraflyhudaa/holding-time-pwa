@@ -11,6 +11,7 @@ import React, { useState, useEffect } from "react";
 import AsyncSelect from "react-select/async";
 import { getProducts } from "../services/productService.js";
 import { getMasterDisplay } from "../services/masterDisplayService.js";
+import { getProductThresholds } from "../services/productConfigService.js";
 
 const AddProductModal = ({ addProduct, isLoading }) => {
   const [productData, setProductData] = useState({
@@ -37,7 +38,7 @@ const AddProductModal = ({ addProduct, isLoading }) => {
 
   const fetchProducts = async () => {
     try {
-      const response = await getProducts();
+      const response = await getProductThresholds();
       setProducts(response);
       const arr = response.map((product) => ({
         value: product.noitem,

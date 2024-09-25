@@ -1,3 +1,4 @@
+import useSWR from "swr";
 import initializeAxios from "../utils/axios";
 
 export const getHoldingTime = async (search) => {
