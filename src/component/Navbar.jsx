@@ -9,9 +9,12 @@
  */
 import { Link } from "react-router-dom";
 import { useRef } from "react";
+import { useAuth } from "../context/AuthContext";
 
 const Navbar = ({ title, children }) => {
   const drawerCheckboxRef = useRef(null);
+  const { user, logout } = useAuth();
+  console.log(user);
 
   const closeDrawer = () => {
     if (drawerCheckboxRef.current) {
@@ -53,7 +56,10 @@ const Navbar = ({ title, children }) => {
               </label>
             </div>
             <div className="mx-2 flex-1 px-2">{title}</div>
-            <div className="ml-auto px-4">
+            <div className="ml-auto px-4 space-x-2">
+              <p className="text-lg">
+                Hi, <span className="font-bold">{user.name}</span>!
+              </p>
               <div className="dropdown dropdown-end">
                 <div
                   tabIndex={0}
@@ -61,7 +67,18 @@ const Navbar = ({ title, children }) => {
                   className="btn btn-ghost btn-circle avatar placeholder"
                 >
                   <div className="bg-neutral text-neutral-content w-8 rounded-full">
-                    <span>SY</span>
+                    {user && user.name ? (
+                      <span>
+                        {user.name
+                          .split(" ")
+                          .map((word) => word[0])
+                          .join("")
+                          .toUpperCase()
+                          .slice(0, 2)}
+                      </span>
+                    ) : (
+                      <span>b</span>
+                    )}
                   </div>
                 </div>
                 <ul
@@ -69,10 +86,10 @@ const Navbar = ({ title, children }) => {
                   className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
                 >
                   <li>
-                    <p>Profile</p>
+                    <p>{`Hi, ${user.name}!`}</p>
                   </li>
-                  <li>
-                    <a>Logout</a>
+                  <li onClick={logout}>
+                    <p>Logout</p>
                   </li>
                 </ul>
               </div>
@@ -122,7 +139,7 @@ const Navbar = ({ title, children }) => {
               </Link>
             </li>
             <li>
-              <Link to={"/items-configuration"} onClick={closeDrawer}>
+              <Link to={"/products-configuration"} onClick={closeDrawer}>
                 PRODUCT CONFIGURATION
               </Link>
             </li>

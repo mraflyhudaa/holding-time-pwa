@@ -1,16 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { calculatePDLC } from "../services/pdlcService";
 import Modal from "../component/Modal";
+import { useAuth } from "../context/AuthContext";
 
 const CalculatePDLC = () => {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [result, setResult] = useState("");
   const [title, setTitle] = useState("");
-  const [shhb, setShhb] = useState("D04");
+  const [shhb, setShhb] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const { user } = useAuth();
 
   useEffect(() => {
     let interval;
@@ -33,7 +36,12 @@ const CalculatePDLC = () => {
       setResult("");
       setProgress(0);
       try {
-        const data = await calculatePDLC(shhb, dateFrom, dateTo, setProgress);
+        const data = await calculatePDLC(
+          user.hhb,
+          dateFrom,
+          dateTo,
+          setProgress
+        );
         console.log(data);
         // setResult(`The difference is ${data.diffInDays} days.`);
         setResult(`Calculate PDLC from ${dateFrom} to ${dateTo} success`);

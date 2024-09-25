@@ -232,7 +232,7 @@ const HoldingTimeCur = () => {
       } else if (totalMinutes <= warningThreshold) {
         className = "text-lg badge badge-lg badge-warning";
       } else {
-        className = "text-lg badge badge-lg badge-primary";
+        className = "text-lg badge badge-lg badge-info";
       }
 
       // console.log("Life Time Color Class:", className);
