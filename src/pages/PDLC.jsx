@@ -3,6 +3,7 @@ import { debounce } from "lodash";
 import Table from "../component/Table";
 import { sumQtyItemHoldingTime } from "../services/holdingTimeService";
 import { getPDLCCalc } from "../services/pdlcService";
+import { Link } from "react-router-dom";
 
 const PDLC = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -12,21 +13,28 @@ const PDLC = () => {
   const [timePage, setTimePage] = useState(0);
   const [pdlcItems, setPdlcItems] = useState([]);
   const [lowQuantityItems, setLowQuantityItems] = useState({});
+  const [time, setTime] = useState({});
+  const [msg, setMsg] = useState(null);
 
   const itemsPerPage = 5;
   const timesPerPage = 4;
   const qtyThreshold = 4;
 
   const fetchItemsPdlc = async (search = "") => {
+    setMsg(null);
     setIsLoading(true);
     try {
       const response = await getPDLCCalc(search);
       setPdlcItems(response.data);
+      setTime(response.today);
       setIsLoading(false);
     } catch (error) {
       console.error("error", error);
+      if (error.response.data.status == 404) {
+        setMsg("PDLC data not calculated today, please click button below");
+      }
       setIsLoading(false);
-      isError(true);
+      setIsError(true);
     }
   };
 
@@ -99,7 +107,16 @@ const PDLC = () => {
     return (
       <div className="px-4 pt-4">
         <div className="flex mb-4 justify-center items-center">
-          <span className="">Error Fetching Data</span>
+          {msg == null ? (
+            <span className="">Error Fetching Data</span>
+          ) : (
+            <div className="flex flex-col items-center space-y-2">
+              <span className="">{msg}</span>
+              <Link className="btn btn-info" to={"/calculate-pdlc"}>
+                CALCULATE PDLC
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -107,29 +124,35 @@ const PDLC = () => {
 
   return (
     <div className="px-4 pt-4">
-      <div className="flex justify-between mb-4">
-        <input
-          type="text"
-          placeholder="SEARCH"
-          className="w-full max-w-xs input input-bordered"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <button
-          className="ml-2 btn btn-primary"
-          onClick={handleSearch}
-          disabled={isLoading}
-        >
-          Submit
-        </button>
+      <div className="flex justify-between mb-4 items-center">
+        <div className="flex">
+          <input
+            type="text"
+            placeholder="SEARCH"
+            className="w-full max-w-xs input input-bordered"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <button
+            className="ml-2 btn btn-primary"
+            onClick={handleSearch}
+            disabled={isLoading}
+          >
+            Submit
+          </button>
+        </div>
+        {time && (
+          <span className="badge text-lg badge-info p-4">{`${time.day}, ${time.date} (${time.type})`}</span>
+        )}
       </div>
-
-      <Table
-        data={currentItems}
-        lowQuantityItems={lowQuantityItems}
-        indexOfFirstTime={indexOfFirstTime}
-        indexOfLastTime={indexOfLastTime}
-      />
+      {currentItems && (
+        <Table
+          data={currentItems}
+          lowQuantityItems={lowQuantityItems}
+          indexOfFirstTime={indexOfFirstTime}
+          indexOfLastTime={indexOfLastTime}
+        />
+      )}
 
       <div className="flex justify-between mt-4">
         <div className="grid grid-cols-4 join">

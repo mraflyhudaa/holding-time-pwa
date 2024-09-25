@@ -6,6 +6,7 @@ const CalculatePDLC = () => {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [result, setResult] = useState("");
+  const [title, setTitle] = useState("");
   const [shhb, setShhb] = useState("D04");
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -16,7 +17,7 @@ const CalculatePDLC = () => {
     if (isLoading && progress < 90) {
       interval = setInterval(() => {
         setProgress((prev) => {
-          const increment = Math.random() * 3 + 1;
+          const increment = Math.random() * 6 + 1;
           return Math.min(prev + increment, 90);
         });
       }, 500);
@@ -35,9 +36,13 @@ const CalculatePDLC = () => {
         const data = await calculatePDLC(shhb, dateFrom, dateTo, setProgress);
         console.log(data);
         // setResult(`The difference is ${data.diffInDays} days.`);
-      } catch (error) {
+        setResult(`Calculate PDLC from ${dateFrom} to ${dateTo} success`);
+        setTitle("Success");
         document.getElementById("modal-component").showModal();
+      } catch (error) {
         setResult("An error occurred while calculating. Please try again.");
+        setTitle("Error");
+        document.getElementById("modal-component").showModal();
       } finally {
         setIsLoading(false);
         setProgress(100);
@@ -49,7 +54,7 @@ const CalculatePDLC = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <Modal isOpen={isModalOpen} title="Error!">
+      <Modal isOpen={isModalOpen} title={title}>
         <p className="py-4">{result}</p>
       </Modal>
       <div className="card bg-base-100 shadow-xl">

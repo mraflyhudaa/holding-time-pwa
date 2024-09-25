@@ -29,9 +29,9 @@ const Table = ({
       `}</style>
       <div className="overflow-x-auto">
         <table className="table w-full mb-4 text-lg border table-zebra">
-          <thead className="text-lg bg-blue-300">
+          <thead className="text-lg bg-info text-black">
             <tr>
-              <th>Item komposisi/ Menu</th>
+              <th>Item</th>
               <th>Unit</th>
               <th>Qty</th>
               {Array.from({ length: indexOfLastTime - indexOfFirstTime }).map(
