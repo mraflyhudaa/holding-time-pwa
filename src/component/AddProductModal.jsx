@@ -145,24 +145,29 @@ const AddProductModal = ({ addProduct, isLoading }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    addProduct({
-      noitem: productData.noitem,
-      name: productData.name,
-      qty_portion: productData.qty_portion,
-      uom: productData.uom,
-      lifeTime: productData.lifeTime,
-      display_id: display.id,
-    });
-    setProductData({
-      noitem: "",
-      name: "",
-      qty_portion: "",
-      uom: "",
-      lifeTime: "00:00:00",
-    });
-    setDisplay({});
-    setCalculatedQty(""); // Reset calculated quantity
-    document.getElementById("my_modal_1").close();
+    console.log(productData);
+    try {
+      addProduct({
+        noitem: productData.noitem,
+        name: productData.name,
+        qty_portion: productData.qty_portion,
+        uom: productData.uom,
+        lifeTime: productData.lifeTime,
+        display_id: display.id,
+      });
+      setProductData({
+        noitem: "",
+        name: "",
+        qty_portion: "",
+        uom: "",
+        lifeTime: "00:00:00",
+      });
+      setDisplay({});
+      setCalculatedQty(""); // Reset calculated quantity
+      document.getElementById("my_modal_1").close();
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (
@@ -206,8 +211,9 @@ const AddProductModal = ({ addProduct, isLoading }) => {
               </label>
               <div className="grid grid-cols-2 items-center space-x-4">
                 <input
-                  type="text"
+                  type="numbet"
                   inputMode="numeric"
+                  maxLength={2}
                   id="qty_portion"
                   name="qty_portion"
                   value={productData.qty_portion}

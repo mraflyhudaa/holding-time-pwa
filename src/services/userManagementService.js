@@ -1,11 +1,9 @@
 import initializeAxios from "../utils/axios";
 
-export const getOrderSpecialItems = async (search) => {
+export const getUsers = async (search) => {
   const api = await initializeAxios();
   try {
-    const response = await api.get(
-      `special-items${search ? `?search=${search}` : ""}`
-    );
+    const response = await api.get(`users${search ? `?search=${search}` : ""}`);
     return response.data;
   } catch (error) {
     if (error.response) {
@@ -19,17 +17,10 @@ export const getOrderSpecialItems = async (search) => {
   }
 };
 
-export const createOrderSpecialItem = async (item) => {
+export const createUser = async (user) => {
   const api = await initializeAxios();
   try {
-    const response = await api.post("special-items", {
-      noitem: item.noitem,
-      name: item.name,
-      plu: item.plu,
-      qty: item.qty,
-      uom: item.uom,
-      status: item.status || "pending",
-    });
+    const response = await api.post("users", user);
     return response.data;
   } catch (error) {
     if (error.response) {
@@ -43,17 +34,10 @@ export const createOrderSpecialItem = async (item) => {
   }
 };
 
-export const updateOrderSpecialItem = async (id, item) => {
+export const updateUser = async (id, user) => {
   const api = await initializeAxios();
   try {
-    const response = await api.put(`special-items/${id}`, {
-      noitem: item.noitem,
-      name: item.name,
-      plu: item.plu,
-      qty: item.qty,
-      uom: item.uom,
-      status: item.status || "completed",
-    });
+    const response = await api.put(`users/${id}`, user);
     return response.data;
   } catch (error) {
     if (error.response) {
@@ -67,10 +51,10 @@ export const updateOrderSpecialItem = async (id, item) => {
   }
 };
 
-export const deleteOrderSpecialItem = async (id) => {
+export const deleteUser = async (id) => {
   const api = await initializeAxios();
   try {
-    const response = await api.delete(`special-items/${id}`);
+    const response = await api.delete(`users/${id}`);
     return response.data;
   } catch (error) {
     if (error.response) {
@@ -84,12 +68,10 @@ export const deleteOrderSpecialItem = async (id) => {
   }
 };
 
-export const updateOrderSpecialItemStatus = async (id) => {
+export const getUserCount = async () => {
   const api = await initializeAxios();
   try {
-    const response = await api.put(`special-items/${id}`, {
-      status: "finished",
-    });
+    const response = await api.get(`users/count`);
     return response.data;
   } catch (error) {
     if (error.response) {

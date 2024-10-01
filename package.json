@@ -46,7 +46,8 @@
     "test-build-claims": "yarn run run-build-claims && vitest run && playwright test",
     "test-build-sw-claims": "yarn run run-build-sw-claims && set SW=true&& vitest run && set SW=true&& playwright test",
     "test": "yarn run test-build-claims && yarn run test-build-sw-claims",
-    "generate-pwa-assets": "pwa-assets-generator"
+    "generate-pwa-assets": "pwa-assets-generator",
+    "start-prod": "yarn run run-build && yarn run start-preview --host"
   },
   "dependencies": {
     "axios": "^1.7.2",

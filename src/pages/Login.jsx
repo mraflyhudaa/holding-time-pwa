@@ -20,7 +20,7 @@ const LoginPage = () => {
             Welcome to Hokben
           </h1>
           <p className="text-xl text-white">
-            Enjoy authentic Japanese cuisine at your fingertips.
+            Holding Time, PDLC, RMLC, and Order Menu Khusus.
           </p>
         </div>
         <div className="card flex-shrink-0 w-full max-w-sm shadow-2xl bg-white">

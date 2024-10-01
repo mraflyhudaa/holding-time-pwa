@@ -14,7 +14,6 @@ import { useAuth } from "../context/AuthContext";
 const Navbar = ({ title, children }) => {
   const drawerCheckboxRef = useRef(null);
   const { user, logout } = useAuth();
-  console.log(user);
 
   const closeDrawer = () => {
     if (drawerCheckboxRef.current) {
@@ -141,6 +140,11 @@ const Navbar = ({ title, children }) => {
             <li>
               <Link to={"/products-configuration"} onClick={closeDrawer}>
                 PRODUCT CONFIGURATION
+              </Link>
+            </li>
+            <li>
+              <Link to={"/user-management"} onClick={closeDrawer}>
+                USER MANAGEMENT
               </Link>
             </li>
           </ul>

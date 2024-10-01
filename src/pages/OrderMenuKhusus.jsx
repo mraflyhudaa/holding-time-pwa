@@ -58,7 +58,8 @@ const OrderMenuKhusus = () => {
       try {
         const response = await getOrderSpecialItems(search);
         const currentTime = new Date().getTime();
-        const items = response.map((item) => ({
+        console.log(response);
+        const items = response.data.map((item) => ({
           ...item,
           initialLifeTime: item.cooking_time,
           cooking_start_time: item.cooking_start_time || currentTime,
@@ -211,24 +212,34 @@ const OrderMenuKhusus = () => {
 
   const handleCompleteModal = (id) => {
     setItemComplete(id);
+    console.log(id);
+    console.log(itemComplete);
     document.getElementById("confirmation_modal").showModal();
   };
 
-  const handleMarkAsComplete = useCallback(async () => {
-    try {
-      await updateOrderSpecialItemStatus(itemComplete);
-      setMenuItems(
-        menuItems.map((item) =>
-          item.id === itemComplete ? { ...item, status: "finished" } : item
-        )
-      );
-    } catch (error) {
-      console.error("Failed to update item status:", error);
-    } finally {
-      setItemComplete(null);
-      document.getElementById("confirmation_modal").close();
-    }
-  }, [itemComplete]);
+  const handleMarkAsComplete = useCallback(
+    async (event) => {
+      event.preventDefault(); // Prevent form submission
+      if (itemComplete) {
+        console.log(itemComplete);
+        try {
+          const response = await updateOrderSpecialItemStatus(itemComplete);
+          setMenuItems(
+            menuItems.map((item) =>
+              item.id === itemComplete ? { ...item, status: "finished" } : item
+            )
+          );
+          console.log(response);
+        } catch (error) {
+          console.error("Failed to update item status:", error);
+        } finally {
+          setItemComplete(null);
+          document.getElementById("confirmation_modal").close();
+        }
+      }
+    },
+    [itemComplete, menuItems]
+  );
 
   const handleSearch = useCallback(() => {
     debouncedFetchMenuItems(searchTerm);
@@ -289,7 +300,7 @@ const OrderMenuKhusus = () => {
             <th>Item</th> */}
             <th>No PLU</th>
             <th>PLU</th>
-            <th>Qty Porsi</th>
+            {/* <th>Qty Porsi</th> */}
             <th>Qty</th>
             <th>UOM</th>
             <th>Cooking Time</th>
@@ -316,8 +327,8 @@ const OrderMenuKhusus = () => {
               {/* <td>{item.noitem}</td>
               <td>{item.name}</td> */}
               <td>{item.plu}</td>
-              <td>{item.description}</td>
-              <td>{item.qty_portion}</td>
+              <td>{item.name}</td>
+              {/* <td>{item.qty_portion}</td> */}
               <td>{item.qty}</td>
               <td>{item.uom}</td>
               <td>
