@@ -22,6 +22,10 @@ const ProtectedRoute = ({ children }) => {
         return "Calculate PDLC";
       case "/calculate-rmlc":
         return "Calculate RMLC";
+      case "/user-management":
+        return "User Management";
+      case "/master-display":
+        return "Master Display";
       default:
         return "Holding Time";
     }

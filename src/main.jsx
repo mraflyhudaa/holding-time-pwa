@@ -15,6 +15,7 @@ import CalculatePDLC from "./pages/CalculatePDLC";
 import CalculateRMLC from "./pages/CalculateRMLC";
 import UserManagement from "./pages/UserManagement";
 import LoginPage from "./pages/Login";
+import MasterDisplay from "./pages/MasterDisplay";
 
 createRoot(document.getElementById("app")).render(
   <BrowserRouter>
@@ -87,6 +88,14 @@ createRoot(document.getElementById("app")).render(
             element={
               <ProtectedRoute>
                 <OrderMenuKhusus />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/master-display"
+            element={
+              <ProtectedRoute>
+                <MasterDisplay />
               </ProtectedRoute>
             }
           />

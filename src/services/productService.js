@@ -1,9 +1,11 @@
 import initializeAxios from "../utils/axios";
 
-export const getProducts = async () => {
+export const getProducts = async (search) => {
   const api = await initializeAxios();
   try {
-    const response = await api.get("products");
+    const response = await api.get(
+      `products${search ? `?search=${search}` : ""}`
+    );
     // console.log(response.data);
     return response.data;
   } catch (error) {

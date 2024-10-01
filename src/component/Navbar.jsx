@@ -132,21 +132,30 @@ const Navbar = ({ title, children }) => {
                 CALCULATE RMLC
               </Link>
             </li>
-            <li>
-              <Link to={"/items-configuration"} onClick={closeDrawer}>
-                ITEM CONFIGURATION
-              </Link>
-            </li>
-            <li>
-              <Link to={"/products-configuration"} onClick={closeDrawer}>
-                PRODUCT CONFIGURATION
-              </Link>
-            </li>
-            <li>
-              <Link to={"/user-management"} onClick={closeDrawer}>
-                USER MANAGEMENT
-              </Link>
-            </li>
+            {(user.role === "admin" || user.role === "storeadmin") && (
+              <>
+                <li>
+                  <Link to={"/items-configuration"} onClick={closeDrawer}>
+                    ITEM CONFIGURATION
+                  </Link>
+                </li>
+                <li>
+                  <Link to={"/products-configuration"} onClick={closeDrawer}>
+                    PRODUCT CONFIGURATION
+                  </Link>
+                </li>
+                <li>
+                  <Link to={"/master-display"} onClick={closeDrawer}>
+                    MASTER DISPLAY
+                  </Link>
+                </li>
+                <li>
+                  <Link to={"/user-management"} onClick={closeDrawer}>
+                    USER MANAGEMENT
+                  </Link>
+                </li>
+              </>
+            )}
           </ul>
         </div>
       </div>

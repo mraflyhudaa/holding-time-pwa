@@ -21,6 +21,8 @@ const ItemsConfiguration = () => {
     expired_threshold: "",
     warning_threshold: "",
     primary_threshold: "",
+    kelipatan_pemasakan: "", // New field
+    active: false, // New field
   });
   const [originalData, setOriginalData] = useState({});
   const itemsPerPage = 5;
@@ -54,16 +56,18 @@ const ItemsConfiguration = () => {
       expired_threshold: product.expired_threshold,
       warning_threshold: product.warning_threshold,
       primary_threshold: product.primary_threshold,
+      kelipatan_pemasakan: product.kelipatan_pemasakan || "", // New field
+      active: product.active === "1", // Convert "1" to true/false
     });
     setOriginalData(product);
     document.getElementById("edit_modal").showModal();
   };
 
   const handleEditFormChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setEditFormData((prevData) => ({
       ...prevData,
-      [name]: value,
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
@@ -83,6 +87,8 @@ const ItemsConfiguration = () => {
     }
 
     try {
+      // Convert checkbox back to "0" or "1" for the backend
+      changes.active = editFormData.active ? "1" : "0";
       await updateProductThresholds(selectedProduct.id, changes);
       document.getElementById("edit_modal").close();
       debouncedFetchProducts(searchTerm); // Refresh data
@@ -154,14 +160,16 @@ const ItemsConfiguration = () => {
             <th>Max Lifetime</th>
             <th>Red</th>
             <th>Yellow</th>
+            <th>Kelipatan Pemasakan</th>
+            <th>Active</th>
             {/* <th>Green</th> */}
             <th>Action</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="text-lg">
           {currentItems.length === 0 && (
             <tr>
-              <td colSpan="7" className="text-center">
+              <td colSpan="9" className="text-center">
                 No data
               </td>
             </tr>
@@ -173,6 +181,8 @@ const ItemsConfiguration = () => {
               <td>{product.max_holding_time}</td>
               <td>{product.expired_threshold}</td>
               <td>{product.warning_threshold}</td>
+              <td>{product.kelipatan_pemasakan}</td>
+              <td>{product.active === "1" ? "Yes" : "No"}</td>
               {/* <td>{product.primary_threshold}</td> */}
               <td>
                 <div className="dropdown dropdown-end">
@@ -277,13 +287,6 @@ const ItemsConfiguration = () => {
               <label className="label">
                 <span className="label-text">Max Lifetime</span>
               </label>
-              {/* <input
-                type="text"
-                name="max_holding_time"
-                value={editFormData.max_holding_time}
-                onChange={handleEditFormChange}
-                className="input input-bordered"
-              /> */}
               <TimeField
                 name="max_holding_time"
                 value={editFormData.max_holding_time}
@@ -301,48 +304,93 @@ const ItemsConfiguration = () => {
             </div>
             <div className="form-control">
               <label className="label">
-                <span className="label-text">Low</span>
+                <span className="label-text">Red</span>
               </label>
               <input
                 type="text"
                 name="expired_threshold"
                 value={editFormData.expired_threshold}
-                onChange={handleEditFormChange}
+                onChange={(e) => {
+                  const value = Math.max(1, parseInt(e.target.value) || 0);
+                  setEditFormData((prevData) => ({
+                    ...prevData,
+                    expired_threshold: value,
+                  }));
+                }}
                 className="input input-bordered"
+                min="1"
+                maxLength={3}
               />
             </div>
             <div className="form-control">
               <label className="label">
-                <span className="label-text">Medium</span>
+                <span className="label-text">Yellow</span>
               </label>
               <input
                 type="text"
                 name="warning_threshold"
                 value={editFormData.warning_threshold}
-                onChange={handleEditFormChange}
+                onChange={(e) => {
+                  const value = Math.max(1, parseInt(e.target.value) || 0);
+                  setEditFormData((prevData) => ({
+                    ...prevData,
+                    warning_threshold: value,
+                  }));
+                }}
                 className="input input-bordered"
+                min="1"
+                maxLength={3}
               />
             </div>
-            {/* <div className="form-control">
+
+            {/* New fields: active and kelipatan_pemasakan */}
+            <div className="form-control">
               <label className="label">
-                <span className="label-text">High</span>
+                <span className="label-text">Kelipatan Pemasakan</span>
               </label>
               <input
-                type="text"
-                name="primary_threshold"
-                value={editFormData.primary_threshold}
-                onChange={handleEditFormChange}
+                type="number"
+                name="kelipatan_pemasakan"
+                value={editFormData.kelipatan_pemasakan}
+                onChange={(e) => {
+                  const value = Math.max(1, parseInt(e.target.value) || 0);
+                  setEditFormData((prevData) => ({
+                    ...prevData,
+                    kelipatan_pemasakan: value,
+                  }));
+                }}
                 className="input input-bordered"
+                min="1"
+                max="20"
               />
-            </div> */}
+            </div>
+            <div className="form-control">
+              <label className="label cursor-pointer">
+                <span className="label-text">Active</span>
+                <input
+                  type="checkbox"
+                  name="active"
+                  checked={editFormData.active}
+                  onChange={handleEditFormChange}
+                  className="checkbox checkbox-primary"
+                />
+              </label>
+            </div>
           </div>
           <div className="modal-action">
-            <button className="btn btn-primary" onClick={handleConfirmEdit}>
-              {isLoading ? "Saving..." : "Save changes"}
+            <button
+              className="btn"
+              onClick={handleConfirmEdit}
+              disabled={isLoading}
+            >
+              {isLoading ? "Saving..." : "Save"}
             </button>
-            <form method="dialog">
-              <button className="btn">Close</button>
-            </form>
+            <button
+              className="btn btn-outline"
+              onClick={() => document.getElementById("edit_modal").close()}
+            >
+              Cancel
+            </button>
           </div>
         </div>
       </dialog>

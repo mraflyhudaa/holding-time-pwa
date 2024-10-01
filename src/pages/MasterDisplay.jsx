@@ -1,45 +1,39 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { debounce } from "lodash";
 import {
-  getUsers,
-  updateUser,
-  deleteUser,
-} from "../services/userManagementService.js";
-import { createUser } from "../services/userManagementService.js";
+  createMasterDisplay,
+  deleteMasterDisplay,
+  getMasterDisplay,
+  updateMasterDisplay,
+} from "../services/masterDisplayService";
 
-const UserManagement = () => {
-  const [users, setUsers] = useState([]);
+const MasterDisplay = () => {
+  const [masterData, setMasterData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [editFormData, setEditFormData] = useState({
     id: "",
-    username: "",
-    name: "",
-    password: "",
-    hhb: "",
-    role: "",
+    description: "",
+    aktif: "0",
   });
   const [addFormData, setAddFormData] = useState({
-    username: "",
-    name: "",
-    password: "",
-    hhb: "",
-    role: "",
+    description: "",
+    aktif: "0",
   });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [userToDelete, setUserToDelete] = useState(null);
+  const [itemToDelete, setItemToDelete] = useState(null);
   const itemsPerPage = 5;
 
-  const debouncedFetchUsers = useMemo(
+  const debouncedFetchMasterData = useMemo(
     () =>
       debounce(async (term) => {
         setIsLoading(true);
         try {
-          const fetchedUsers = await getUsers(term);
-          setUsers(fetchedUsers.users);
+          const fetchedData = await getMasterDisplay(term);
+          setMasterData(fetchedData);
         } catch (error) {
-          console.error("Error fetching users:", error);
+          console.error("Error fetching master data:", error);
         } finally {
           setIsLoading(false);
         }
@@ -48,92 +42,86 @@ const UserManagement = () => {
   );
 
   useEffect(() => {
-    debouncedFetchUsers(searchTerm);
-  }, [searchTerm, debouncedFetchUsers]);
+    debouncedFetchMasterData(searchTerm);
+  }, [searchTerm, debouncedFetchMasterData]);
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
   };
 
-  const handleEditUser = (user) => {
+  const handleEditItem = (item) => {
     setEditFormData({
-      id: user.id,
-      username: user.username,
-      namme: user.name,
-      password: "",
-      hhb: user.hhb,
-      role: user.role,
+      id: item.id,
+      description: item.description,
+      aktif: item.aktif,
     });
     document.getElementById("edit_modal").showModal();
   };
 
   const handleEditFormChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setEditFormData((prevData) => ({
       ...prevData,
-      [name]: value,
+      [name]: type === "checkbox" ? (checked ? "1" : "0") : value,
     }));
   };
 
   const handleConfirmEdit = async () => {
     setIsLoading(true);
     try {
-      await updateUser(editFormData.id, editFormData);
+      await updateMasterDisplay(editFormData.id, editFormData);
+      console.log(editFormData);
       document.getElementById("edit_modal").close();
-      debouncedFetchUsers(searchTerm);
+      debouncedFetchMasterData(searchTerm);
     } catch (error) {
-      console.error("Error updating user:", error);
+      console.error("Error updating master data:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleAddUser = () => {
+  const handleAddItem = () => {
     setAddFormData({
-      username: "",
-      name: "",
-      password: "",
-      hhb: "",
-      role: "",
+      description: "",
+      aktif: "0",
     });
     document.getElementById("add_modal").showModal();
   };
 
   const handleAddFormChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setAddFormData((prevData) => ({
       ...prevData,
-      [name]: value,
+      [name]: type === "checkbox" ? (checked ? "1" : "0") : value,
     }));
   };
 
   const handleConfirmAdd = async () => {
     setIsLoading(true);
     try {
-      await createUser(addFormData);
+      await createMasterDisplay(addFormData);
       document.getElementById("add_modal").close();
-      debouncedFetchUsers(searchTerm);
+      debouncedFetchMasterData(searchTerm);
     } catch (error) {
-      console.error("Error adding user:", error);
+      console.error("Error adding master data:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleDeleteUser = (user) => {
-    setUserToDelete(user);
+  const handleDeleteItem = (item) => {
+    setItemToDelete(item);
     setShowDeleteModal(true);
   };
 
   const handleConfirmDelete = async () => {
     setIsLoading(true);
     try {
-      console.log(userToDelete.id);
-      await deleteUser(userToDelete.id);
+      await deleteMasterDisplay(itemToDelete.id);
       setShowDeleteModal(false);
-      debouncedFetchUsers(searchTerm);
+      debouncedFetchMasterData(searchTerm);
     } catch (error) {
-      console.error("Error deleting user:", error);
+      console.error("Error deleting master data:", error);
     } finally {
       setIsLoading(false);
     }
@@ -145,10 +133,10 @@ const UserManagement = () => {
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     return {
-      currentItems: users.slice(indexOfFirstItem, indexOfLastItem),
+      currentItems: masterData.slice(indexOfFirstItem, indexOfLastItem),
       indexOfLastItem,
     };
-  }, [currentPage, users]);
+  }, [currentPage, masterData]);
 
   return (
     <div className="px-4 pt-4">
@@ -163,22 +151,22 @@ const UserManagement = () => {
           />
           <button
             className="ml-2 btn btn-primary"
-            onClick={() => debouncedFetchUsers(searchTerm)}
+            onClick={() => debouncedFetchMasterData(searchTerm)}
             disabled={isLoading}
           >
             {isLoading ? "Loading..." : "Submit"}
           </button>
         </div>
-        <button className="btn btn-secondary" onClick={handleAddUser}>
-          Add User
+        <button className="btn btn-secondary" onClick={handleAddItem}>
+          Add Item
         </button>
       </div>
       <table className="table w-full border table-zebra">
         <thead className="text-lg bg-slate-300 text-black">
           <tr>
-            <th>Username</th>
-            <th>HHB</th>
-            <th>Role</th>
+            <th>ID</th>
+            <th>Description</th>
+            <th>Active</th>
             <th>Action</th>
           </tr>
         </thead>
@@ -190,11 +178,11 @@ const UserManagement = () => {
               </td>
             </tr>
           )}
-          {currentItems.map((user) => (
-            <tr key={user.id}>
-              <td>{user.username}</td>
-              <td>{user.hhb}</td>
-              <td>{user.role}</td>
+          {currentItems.map((item) => (
+            <tr key={item.id}>
+              <td>{masterData.indexOf(item) + 1}</td>
+              <td>{item.description}</td>
+              <td>{item.aktif === "1" ? "Yes" : "No"}</td>
               <td>
                 <div className="dropdown dropdown-end">
                   <div
@@ -215,10 +203,10 @@ const UserManagement = () => {
                     className="menu dropdown-content bg-base-100 rounded-box z-[1] mt-4 w-52 p-2 shadow"
                   >
                     <li>
-                      <a onClick={() => handleEditUser(user)}>Edit</a>
+                      <a onClick={() => handleEditItem(item)}>Edit</a>
                     </li>
                     <li>
-                      <a onClick={() => handleDeleteUser(user)}>Delete</a>
+                      <a onClick={() => handleDeleteItem(item)}>Delete</a>
                     </li>
                   </ul>
                 </div>
@@ -245,14 +233,16 @@ const UserManagement = () => {
           <button
             className="join-item btn btn-outline"
             onClick={() => paginate(currentPage + 1)}
-            disabled={indexOfLastItem >= users.length}
+            disabled={indexOfLastItem >= masterData.length}
           >
             Next &gt;
           </button>
           <button
             className="join-item btn btn-outline"
-            onClick={() => paginate(Math.ceil(users.length / itemsPerPage))}
-            disabled={indexOfLastItem >= users.length}
+            onClick={() =>
+              paginate(Math.ceil(masterData.length / itemsPerPage))
+            }
+            disabled={indexOfLastItem >= masterData.length}
           >
             Last &gt;&gt;
           </button>
@@ -262,72 +252,30 @@ const UserManagement = () => {
       {/* Edit Modal */}
       <dialog id="edit_modal" className="modal modal-bottom sm:modal-middle">
         <div className="modal-box">
-          <h3 className="font-bold text-lg">Edit User</h3>
+          <h3 className="font-bold text-lg">Edit Master Data</h3>
           <div className="py-4">
             <div className="form-control">
               <label className="label">
-                <span className="label-text">Username</span>
+                <span className="label-text">Description</span>
               </label>
-              <input
-                type="text"
-                name="username"
-                value={editFormData.username}
+              <textarea
+                name="description"
+                value={editFormData.description}
                 onChange={handleEditFormChange}
-                className="input input-bordered"
-              />
+                className="textarea textarea-bordered"
+              ></textarea>
             </div>
             <div className="form-control">
-              <label className="label">
-                <span className="label-text">Name</span>
+              <label className="label cursor-pointer">
+                <span className="label-text">Active</span>
+                <input
+                  type="checkbox"
+                  name="aktif"
+                  checked={editFormData.aktif === "1"}
+                  onChange={handleEditFormChange}
+                  className="checkbox"
+                />
               </label>
-              <input
-                type="text"
-                name="name"
-                value={editFormData.name}
-                onChange={handleEditFormChange}
-                className="input input-bordered"
-              />
-            </div>
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Password</span>
-              </label>
-              <input
-                type="password"
-                name="password"
-                value={editFormData.password}
-                onChange={handleEditFormChange}
-                className="input input-bordered"
-                placeholder="Leave blank to keep current password"
-              />
-            </div>
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">HHB</span>
-              </label>
-              <input
-                type="text"
-                name="hhb"
-                value={editFormData.hhb}
-                onChange={handleEditFormChange}
-                className="input input-bordered"
-              />
-            </div>
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Role</span>
-              </label>
-              <select
-                name="role"
-                value={editFormData.role}
-                onChange={handleEditFormChange}
-                className="select select-bordered"
-              >
-                <option value="">Select a role</option>
-                {/* <option value="admin">Admin</option> */}
-                <option value="user">Store</option>
-                <option value="storeadmin">Store Admin</option>
-              </select>
             </div>
           </div>
           <div className="modal-action">
@@ -344,77 +292,35 @@ const UserManagement = () => {
       {/* Add Modal */}
       <dialog id="add_modal" className="modal modal-bottom sm:modal-middle">
         <div className="modal-box">
-          <h3 className="font-bold text-lg">Add User</h3>
+          <h3 className="font-bold text-lg">Add Master Data</h3>
           <div className="py-4">
             <div className="form-control">
               <label className="label">
-                <span className="label-text">Username</span>
+                <span className="label-text">Description</span>
               </label>
-              <input
-                type="text"
-                name="username"
-                value={addFormData.username}
+              <textarea
+                name="description"
+                value={addFormData.description}
                 onChange={handleAddFormChange}
-                className="input input-bordered"
-              />
+                className="textarea textarea-bordered"
+              ></textarea>
             </div>
             <div className="form-control">
-              <label className="label">
-                <span className="label-text">Name</span>
+              <label className="label cursor-pointer">
+                <span className="label-text">Active</span>
+                <input
+                  type="checkbox"
+                  name="aktif"
+                  checked={addFormData.aktif === "1"}
+                  onChange={handleAddFormChange}
+                  className="checkbox"
+                />
               </label>
-              <input
-                type="text"
-                name="name"
-                value={addFormData.name}
-                onChange={handleAddFormChange}
-                className="input input-bordered"
-              />
-            </div>
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Password</span>
-              </label>
-              <input
-                type="password"
-                name="password"
-                value={addFormData.password}
-                onChange={handleAddFormChange}
-                className="input input-bordered"
-              />
-            </div>
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">HHB</span>
-              </label>
-              <input
-                type="text"
-                name="hhb"
-                value={addFormData.hhb}
-                onChange={handleAddFormChange}
-                className="input input-bordered"
-              />
-            </div>
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Role</span>
-              </label>
-              <select
-                name="role"
-                value={addFormData.role}
-                onChange={handleAddFormChange}
-                className="select select-bordered"
-                required
-              >
-                <option value="">Select a role</option>
-                <option value="admin">Admin</option>
-                <option value="user">User</option>
-                <option value="storeadmin">Store Admin</option>
-              </select>
             </div>
           </div>
           <div className="modal-action">
             <button className="btn btn-primary" onClick={handleConfirmAdd}>
-              {isLoading ? "Adding..." : "Add User"}
+              {isLoading ? "Adding..." : "Add Item"}
             </button>
             <form method="dialog">
               <button className="btn">Close</button>
@@ -429,8 +335,8 @@ const UserManagement = () => {
           <div className="modal-box">
             <h3 className="font-bold text-lg">Confirm Delete</h3>
             <p className="py-4">
-              Are you sure you want to delete the user "{userToDelete.username}
-              "?
+              Are you sure you want to delete the item with ID "
+              {itemToDelete.id}"?
             </p>
             <div className="modal-action">
               <button
@@ -451,4 +357,4 @@ const UserManagement = () => {
   );
 };
 
-export default UserManagement;
+export default MasterDisplay;

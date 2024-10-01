@@ -40,7 +40,8 @@ const CalculateRMLC = () => {
         setTitle("Success");
         document.getElementById("modal-component").showModal();
       } catch (error) {
-        setResult("An error occurred while calculating. Please try again.");
+        const res = error.response.data;
+        setResult(res.messages.error);
         setTitle("Error");
         document.getElementById("modal-component").showModal();
       } finally {

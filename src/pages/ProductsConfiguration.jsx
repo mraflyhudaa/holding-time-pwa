@@ -20,7 +20,7 @@ const ProductsConfiguration = () => {
     name: "",
     max_cooking_time: "",
     type: "",
-    active: "",
+    active: false,
   });
   const [originalData, setOriginalData] = useState({});
   const itemsPerPage = 5;
@@ -52,17 +52,17 @@ const ProductsConfiguration = () => {
       name: product.name,
       max_cooking_time: product.max_cooking_time,
       type: product.type,
-      active: product.active,
+      active: product.active === "1",
     });
     setOriginalData(product);
     document.getElementById("edit_product_modal").showModal();
   };
 
   const handleEditFormChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setEditFormData((prevData) => ({
       ...prevData,
-      [name]: value,
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
@@ -76,13 +76,13 @@ const ProductsConfiguration = () => {
     }, {});
 
     if (Object.keys(changes).length === 0) {
-      console.log(selectedProduct);
       document.getElementById("edit_product_modal").close();
       setIsLoading(false);
       return;
     }
 
     try {
+      changes.active = editFormData.active ? "1" : "0";
       await updateProduct(selectedProduct.id, changes);
       document.getElementById("edit_product_modal").close();
       debouncedFetchProducts(searchTerm); // Refresh data
@@ -307,6 +307,18 @@ const ProductsConfiguration = () => {
                 <option value="normal">Normal</option>
                 <option value="special">Khusus</option>
               </select>
+            </div>
+            <div className="form-control">
+              <label className="label cursor-pointer">
+                <span className="label-text">Active</span>
+                <input
+                  type="checkbox"
+                  name="active"
+                  checked={editFormData.active}
+                  onChange={handleEditFormChange}
+                  className="checkbox checkbox-primary"
+                />
+              </label>
             </div>
           </div>
           <div className="modal-action">
