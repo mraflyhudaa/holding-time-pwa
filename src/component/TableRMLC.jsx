@@ -6,10 +6,25 @@ const TableRMLC = ({ data, indexOfFirstTime, indexOfLastTime }) => {
     return item ? item.classification : "";
   };
 
+  const getClassificationColor = (classification) => {
+    switch (classification) {
+      case "LOW":
+        return "text-green-500";
+      case "MEDIUM":
+        return "text-yellow-500";
+      case "HIGH":
+        return "text-orange-500";
+      case "SUPER":
+        return "text-red-500";
+      default:
+        return "";
+    }
+  };
+
   return (
     <div className="overflow-x-auto">
-      <table className="table w-full mb-4 text-lg border table-zebra">
-        <thead className="text-lg bg-accent text-black">
+      <table className="table w-full mb-4 text-xl border table-zebra">
+        <thead className="text-xl bg-accent text-white">
           <tr>
             <th>Menu</th>
             <th>Unit</th>
@@ -17,11 +32,14 @@ const TableRMLC = ({ data, indexOfFirstTime, indexOfLastTime }) => {
             {Array.from({ length: indexOfLastTime - indexOfFirstTime }).map(
               (_, i) => {
                 const timeIdx = indexOfFirstTime + i;
+                const classification = getClassification(timeIdx);
                 return (
                   <th key={timeIdx} colSpan={2} className="text-center">
                     {timeIdx < 24 ? data[0].times[timeIdx].time : ""}
                     <br />
-                    {timeIdx < 24 ? getClassification(timeIdx) : ""}
+                    <span className={getClassificationColor(classification)}>
+                      {timeIdx < 24 ? classification : ""}
+                    </span>
                   </th>
                 );
               }

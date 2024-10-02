@@ -54,7 +54,7 @@ const Navbar = ({ title, children }) => {
                 </svg>
               </label>
             </div>
-            <div className="mx-2 flex-1 px-2">{title}</div>
+            <div className="mx-2 flex-1 px-2 text-lg">{title}</div>
             <div className="ml-auto px-4 space-x-2">
               <p className="text-lg">
                 Hi, <span className="font-bold">{user.name}</span>!
@@ -96,18 +96,30 @@ const Navbar = ({ title, children }) => {
           </div>
 
           {children}
-          <div className="flex justify-between p-4">
-            <Link className="btn btn-primary" to={"/"} onClick={closeDrawer}>
+          <div className="flex justify-between p-4 ">
+            <Link
+              className="btn btn-primary text-lg"
+              to={"/"}
+              onClick={closeDrawer}
+            >
               DISPLAY HOLDING TIME
             </Link>
-            <Link className="btn btn-info" to={"/pdlc"} onClick={closeDrawer}>
+            <Link
+              className="btn btn-info text-lg"
+              to={"/pdlc"}
+              onClick={closeDrawer}
+            >
               PDLC
             </Link>
-            <Link className="btn btn-accent" to={"/rmlc"} onClick={closeDrawer}>
+            <Link
+              className="btn btn-accent text-lg"
+              to={"/rmlc"}
+              onClick={closeDrawer}
+            >
               RMLC
             </Link>
             <Link
-              className="btn btn-secondary"
+              className="btn btn-secondary text-lg"
               to={"/order-menu-khusus"}
               onClick={closeDrawer}
             >
@@ -121,7 +133,7 @@ const Navbar = ({ title, children }) => {
             aria-label="close sidebar"
             className="drawer-overlay"
           ></label>
-          <ul className="menu bg-base-200 min-h-full w-80 px-4 py-20">
+          <ul className="menu bg-base-200 min-h-full w-80 px-4 py-20 text-lg">
             <li>
               <Link to={"/calculate-pdlc"} onClick={closeDrawer}>
                 CALCULATE PDLC

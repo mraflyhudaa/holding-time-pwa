@@ -1,6 +1,13 @@
 import initializeAxios from "../utils/axios";
 
-export const calculateRMLC = async (shhb, dateFrom, dateTo, setProgress) => {
+export const calculateRMLC = async (
+  shhb,
+  dateFrom,
+  dateTo,
+  hourFrom,
+  hourTo,
+  setProgress
+) => {
   const api = await initializeAxios();
   try {
     const params = new URLSearchParams();
@@ -8,6 +15,8 @@ export const calculateRMLC = async (shhb, dateFrom, dateTo, setProgress) => {
     params.append("shhb", shhb);
     params.append("dtg1", dateFrom);
     params.append("dtg2", dateTo);
+    params.append("hour_from", hourFrom);
+    params.append("hour_to", hourTo);
     const response = await api.post("calculate-sales-plu", params, {
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",

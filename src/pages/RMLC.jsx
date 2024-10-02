@@ -122,7 +122,7 @@ const RMLC = () => {
           </button>
         </div>
         {time && (
-          <span className="badge text-lg badge-accent p-4">{`${time.day}, ${time.date} (${time.type})`}</span>
+          <span className="badge badge-lg text-xl badge-accent p-4">{`${time.day}, ${time.date} (${time.type})`}</span>
         )}
       </div>
       {currentItems && (
@@ -137,27 +137,27 @@ const RMLC = () => {
       <div className="flex justify-between mt-4">
         <div className="grid grid-cols-4 join">
           <button
-            className="join-item btn btn-outline"
+            className="join-item btn btn-outline text-lg"
             onClick={() => paginate(1)}
           >
             &lt;&lt; First
           </button>
           <button
-            className="join-item btn btn-outline"
+            className="join-item btn btn-outline text-lg"
             onClick={() => paginate(currentPage - 1)}
             disabled={currentPage === 1}
           >
             &lt; Prev
           </button>
           <button
-            className="join-item btn btn-outline"
+            className="join-item btn btn-outline text-lg"
             onClick={() => paginate(currentPage + 1)}
             disabled={indexOfLastItem >= sortedItems.length}
           >
             Next &gt;
           </button>
           <button
-            className="join-item btn btn-outline"
+            className="join-item btn btn-outline text-lg"
             onClick={() =>
               paginate(Math.ceil(sortedItems.length / itemsPerPage))
             }
@@ -168,14 +168,14 @@ const RMLC = () => {
         </div>
         <div className="grid grid-cols-2 join">
           <button
-            className="join-item btn btn-outline"
+            className="join-item btn btn-outline text-lg"
             onClick={() => paginateTime(timePage - 1)}
             disabled={timePage === 0}
           >
             &lt; Prev Hour
           </button>
           <button
-            className="join-item btn btn-outline"
+            className="join-item btn btn-outline text-lg"
             onClick={() => paginateTime(timePage + 1)}
             disabled={indexOfLastTime >= indexOfLastPage}
           >

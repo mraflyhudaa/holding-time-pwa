@@ -5,6 +5,8 @@ import Modal from "../component/Modal";
 const CalculateRMLC = () => {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [hourFrom, setHourFrom] = useState("");
+  const [hourTo, setHourTo] = useState("");
   const [result, setResult] = useState("");
   const [title, setTitle] = useState("");
   const [shhb, setShhb] = useState("D04");
@@ -33,10 +35,19 @@ const CalculateRMLC = () => {
       setResult("");
       setProgress(0);
       try {
-        const data = await calculateRMLC(shhb, dateFrom, dateTo, setProgress);
+        const data = await calculateRMLC(
+          shhb,
+          dateFrom,
+          dateTo,
+          hourFrom,
+          hourTo,
+          setProgress
+        );
         console.log(data);
         // setResult(`The difference is ${data.diffInDays} days.`);
-        setResult(`Calculate RMLC from ${dateFrom} to ${dateTo} success`);
+        setResult(
+          `Calculate RMLC from ${dateFrom} ${hourFrom}:00 to ${dateTo} ${hourTo}:00 success`
+        );
         setTitle("Success");
         document.getElementById("modal-component").showModal();
       } catch (error) {
@@ -60,32 +71,62 @@ const CalculateRMLC = () => {
       </Modal>
       <div className="card bg-base-100 shadow-xl">
         <div className="card-body">
-          <h2 className="card-title"></h2>
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Date From</span>
-            </label>
-            <input
-              type="date"
-              className="input input-bordered"
-              value={dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
-            />
+          <h2 className="card-title text-xl">Calculate RMLC</h2>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text text-lg">Date From</span>
+              </label>
+              <input
+                type="date"
+                className="input input-bordered"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+              />
+            </div>
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text text-lg">Date To</span>
+              </label>
+              <input
+                type="date"
+                className="input input-bordered"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+              />
+            </div>
           </div>
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text">Date To</span>
-            </label>
-            <input
-              type="date"
-              className="input input-bordered"
-              value={dateTo}
-              onChange={(e) => setDateTo(e.target.value)}
-            />
+          <div className="grid grid-cols-2 gap-4 mt-4">
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text text-lg">Hour From (0-23)</span>
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="23"
+                className="input input-bordered"
+                value={hourFrom}
+                onChange={(e) => setHourFrom(e.target.value)}
+              />
+            </div>
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text text-lg">Hour To (0-23)</span>
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="23"
+                className="input input-bordered"
+                value={hourTo}
+                onChange={(e) => setHourTo(e.target.value)}
+              />
+            </div>
           </div>
           <div className="form-control mt-6">
             <button
-              className="btn btn-primary"
+              className="btn btn-primary text-lg"
               onClick={handleCalculate}
               disabled={isLoading}
             >
@@ -100,16 +141,11 @@ const CalculateRMLC = () => {
                   style={{ width: `${progress}%` }}
                 ></div>
               </div>
-              <p className="text-center mt-2">
+              <p className="text-center mt-2 text-lg">
                 Calculating... {Math.round(progress)}%
               </p>
             </div>
           )}
-          {/* {result && !isLoading && (
-            <div className="mt-4 text-center">
-              <p>{result}</p>
-            </div>
-          )} */}
         </div>
       </div>
     </div>

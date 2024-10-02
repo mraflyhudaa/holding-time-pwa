@@ -11,6 +11,22 @@ const Table = ({
     return item ? item.classification : "";
   };
 
+  // Define a function to assign color classes based on classification
+  const getClassificationColor = (classification) => {
+    switch (classification) {
+      case "LOW":
+        return "text-green-500";
+      case "MEDIUM":
+        return "text-yellow-500";
+      case "HIGH":
+        return "text-orange-500";
+      case "SUPER":
+        return "text-red-500";
+      default:
+        return "";
+    }
+  };
+
   return (
     <>
       <style jsx="true">{`
@@ -25,11 +41,12 @@ const Table = ({
         }
         .animate-long-pulse {
           animation: longPulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+          background-color: rgba(255, 99, 71, 0.5);
         }
       `}</style>
       <div className="overflow-x-auto">
-        <table className="table w-full mb-4 text-lg border table-zebra">
-          <thead className="text-lg bg-info text-black">
+        <table className="table w-full mb-4 text-xl border table-zebra">
+          <thead className="text-xl bg-info text-black">
             <tr>
               <th>Item</th>
               <th>Unit</th>
@@ -37,11 +54,14 @@ const Table = ({
               {Array.from({ length: indexOfLastTime - indexOfFirstTime }).map(
                 (_, i) => {
                   const timeIdx = indexOfFirstTime + i;
+                  const classification = getClassification(timeIdx);
                   return (
                     <th key={timeIdx} colSpan={2} className="text-center">
                       {timeIdx < 24 ? data[0].times[timeIdx].time : ""}
                       <br />
-                      {timeIdx < 24 ? getClassification(timeIdx) : ""}
+                      <span className={getClassificationColor(classification)}>
+                        {timeIdx < 24 ? classification : ""}
+                      </span>
                     </th>
                   );
                 }
