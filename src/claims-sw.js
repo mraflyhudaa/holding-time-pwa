@@ -29,7 +29,7 @@ clientsClaim();
 self.addEventListener("push", (event) => {
   const options = {
     body: event.data.text(),
-    icon: "/assets/icon.png", // Ensure this path is correct
+    icon: "/assets/pwa-64x64.png", // Ensure this path is correct
   };
   event.waitUntil(self.registration.showNotification("Holding Time", options));
 });

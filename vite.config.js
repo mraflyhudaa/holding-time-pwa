@@ -54,6 +54,13 @@ const pwaOptions = {
     type: "module",
     navigateFallback: "index.html",
   },
+  workbox: {
+    skipWaiting: true,
+    clientsClaim: true,
+  },
+  injectManifest: {
+    additionalManifestEntries: [{ url: "/", revision: "v1.0.0" }],
+  },
 };
 
 const replaceOptions = { __DATE__: new Date().toISOString() };
@@ -77,10 +84,10 @@ if (claims) pwaOptions.registerType = "autoUpdate";
 
 if (reload) {
   replaceOptions.__RELOAD_SW__ = JSON.stringify(true);
-  console.log(replaceOptions);
 }
 
 if (selfDestroying) pwaOptions.selfDestroying = selfDestroying;
+console.log(pwaOptions);
 
 export default defineConfig({
   // base: process.env.BASE_URL || 'https://github.com/',

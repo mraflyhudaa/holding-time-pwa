@@ -24,7 +24,7 @@
     "run-build-sw": "rimraf dist && set NODE_ENV=production&& set DEBUG=vite-plugin-pwa&& set BASE_URL=/&& set SOURCE_MAP=true&& set SW=true&& vite build",
     "run-build-sw-reloadsw": "set DEBUG=vite-plugin-pwa&& set BASE_URL=/&& set SOURCE_MAP=true&& set RELOAD_SW=true&& set SW=true&& vite build",
     "run-build-sw-claims": "set DEBUG=vite-plugin-pwa&& set BASE_URL=/&& set SOURCE_MAP=true&& set CLAIMS=true&& set SW=true&& vite build",
-    "run-build-sw-claims-reloadsw": "set DEBUG=vite-plugin-pwa&& set BASE_URL=/&& set SOURCE_MAP=true&& set CLAIMS=true&& set RELOAD_SW=true&& set SW=true&& yarn version --patch && vite build",
+    "run-build-sw-claims-reloadsw": "set DEBUG=vite-plugin-pwa&& set BASE_URL=/&& set SOURCE_MAP=true&& set CLAIMS=true&& set RELOAD_SW=true&& set SW=true&& vite build",
     "start-destroy": "yarn run run-build-destroy && yarn run serve",
     "start-reloadsw-destroy": "yarn run run-build-reloadsw-destroy && yarn run serve",
     "start-claims-destroy": "yarn run run-build-claims-destroy && yarn run serve",
