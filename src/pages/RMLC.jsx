@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { debounce } from "lodash";
-import Table from "../component/Table";
+import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
 import { sumQtyItemHoldingTime } from "../services/holdingTimeService";
 import { getRMLCCalc } from "../services/rmlcService";
-import { Link } from "react-router-dom";
 import TableRMLC from "../component/TableRMLC";
+import Table from "../component/Table";
 
 const RMLC = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -29,12 +30,31 @@ const RMLC = () => {
       setTime(response.today);
       setIsLoading(false);
     } catch (error) {
-      console.error("error", error.response.data);
-      if (error.response.data.status == "404") {
-        setMsg("RMLC data not calculated today, please click button below");
+      // console.error("error", error);
+      if (error.response && error.response.status === 404) {
+        setMsg(
+          "PDLC data not calculated today. Please click the button below to recalculate."
+        );
+        setIsError(true);
+        toast.warning(
+          "RMLC data not calculated today. Please calculate first.",
+          {
+            position: "top-right",
+            autoClose: 1000,
+          }
+        );
+      } else {
+        setIsError(true);
+        toast.error(
+          "An error occurred while fetching data. Please try again.",
+          {
+            position: "top-right",
+            autoClose: 2000,
+          }
+        );
       }
+    } finally {
       setIsLoading(false);
-      setIsError(true);
     }
   };
 

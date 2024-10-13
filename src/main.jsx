@@ -19,6 +19,7 @@ import LoginPage from "./pages/Login";
 import MasterDisplay from "./pages/MasterDisplay";
 
 import { registerSW } from "virtual:pwa-register";
+import { ToastContainer } from "react-toastify";
 
 const intervalMS = 60 * 60 * 1000;
 
@@ -144,6 +145,7 @@ createRoot(document.getElementById("app")).render(
         </Route>
         {/* <Route path="*" element={<h1>Not Found</h1>} /> */}
       </Routes>
+      <ToastContainer />
     </AuthProvider>
   </BrowserRouter>
 );

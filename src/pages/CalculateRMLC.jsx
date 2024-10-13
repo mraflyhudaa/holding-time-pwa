@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { calculateRMLC } from "../services/rmlcService";
 import Modal from "../component/Modal";
+import { useAuth } from "../context/AuthContext";
 
 const CalculateRMLC = () => {
   const [dateFrom, setDateFrom] = useState("");
@@ -13,6 +14,8 @@ const CalculateRMLC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const { user } = useAuth();
 
   useEffect(() => {
     let interval;
@@ -36,7 +39,7 @@ const CalculateRMLC = () => {
       setProgress(0);
       try {
         const data = await calculateRMLC(
-          shhb,
+          user.hhb,
           dateFrom,
           dateTo,
           hourFrom,

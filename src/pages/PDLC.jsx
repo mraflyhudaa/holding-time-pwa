@@ -31,14 +31,28 @@ const PDLC = () => {
       setIsLoading(false);
     } catch (error) {
       console.error("error", error);
-      if (error.response.data.status == 404) {
-        setMsg("PDLC data not calculated today, please click button below");
+      if (error.response && error.response.status === 404) {
+        setMsg(
+          "PDLC data not calculated today. Please click the button below to recalculate."
+        );
         setIsError(true);
+        toast.warning(
+          "PDLC data not calculated today. Please calculate first.",
+          {
+            position: "top-right",
+            autoClose: 1000,
+          }
+        );
+      } else {
+        setIsError(true);
+        toast.error(
+          "An error occurred while fetching data. Please try again.",
+          {
+            position: "top-right",
+            autoClose: 2000,
+          }
+        );
       }
-      toast.error("An error occurred while fetching data. Please try again.", {
-        position: "top-right",
-        autoClose: 5000,
-      });
     } finally {
       setIsLoading(false);
     }
