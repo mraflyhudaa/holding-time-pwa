@@ -89,6 +89,7 @@ export const updateOrderSpecialItemStatus = async (id) => {
   try {
     const response = await api.put(`special-items/${id}`, {
       status: "finished",
+      cooking_start_time: 0,
     });
     return response.data;
   } catch (error) {

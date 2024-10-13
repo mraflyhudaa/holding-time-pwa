@@ -10,13 +10,14 @@ import {
 } from "../services/orderMenuKhusus.js";
 import { formatTime } from "../utils/formatTime.js";
 import { sortItemsByLifeTime } from "../utils/sortItemsByLifetime.js";
+import { toast } from "react-toastify";
 
 const OrderMenuKhusus = () => {
   const [menuItems, setMenuItems] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const [sortDirection, setSortDirection] = useState("asc"); // State for sorting direction
+  const [sortDirection, setSortDirection] = useState("asc");
   const [itemComplete, setItemComplete] = useState(null);
   const [productConfigs, setProductConfigs] = useState({});
 
@@ -80,33 +81,6 @@ const OrderMenuKhusus = () => {
     [fetchItems]
   );
 
-  // const updateLifeTimes = useCallback(() => {
-  //   const currentTime = new Date().getTime();
-  //   setMenuItems((prevItems) => {
-  //     const updatedItems = prevItems.map((item) => {
-  //       const updatedItem = calculateRemainingTime(item, currentTime);
-  //       console.log("Updated Item:", updatedItem.cooking_time);
-  //       if (
-  //         updatedItem.cooking_time === "00:00:00" &&
-  //         !processedItemIds.has(item.id) &&
-  //         item.status !== "finished"
-  //       ) {
-  //         updateOrderSpecialItemStatus(item)
-  //           .then((response) => {
-  //             console.log("Marked as finished:", response);
-  //           })
-  //           .catch((error) => {
-  //             console.error("Error marking as finished:", error);
-  //           });
-  //         // insertWasteItem(updatedItem);
-  //         processedItemIds.add(item.id);
-  //       }
-  //       return updatedItem;
-  //     });
-  //     return sortItemsByLifeTime(updatedItems);
-  //   });
-  // }, [calculateRemainingTime, processedItemIds]);
-
   const updateLifeTimes = useCallback(() => {
     const currentTime = new Date().getTime();
     setMenuItems((prevItems) => {
@@ -116,39 +90,14 @@ const OrderMenuKhusus = () => {
         const itemUpdatedAt = new Date(item.updated_at).getTime();
         const elapsedTime = currentTime - itemUpdatedAt;
         const cookingTimeInMs = convertToMilliseconds(updatedItem.cooking_time);
-        if (
-          updatedItem.cooking_time === "00:00:00" &&
-          !processedItemIds.has(item.id) &&
-          item.status !== "finished"
-        ) {
-          updatedItem.status = "finished";
-          updateOrderSpecialItemStatus(item)
-            .then((response) => {
-              console.log("Marked as finished:", response);
-              // processedItemIds.add(item.id);
-            })
-            .catch((error) => {
-              console.error("Error marking as finished:", error);
-            });
-        }
-        const bufferTimeMs = 2 * 60 * 1000; // Buffer time of 2 minutes
-        if (item.status === "finished" && elapsedTime > bufferTimeMs) {
-          deleteOrderSpecialItem(item.id)
-            .then(() => {
-              console.log(`Item with id ${item.id} deleted`);
-              setMenuItems((prevItems) =>
-                prevItems.filter((i) => i.id !== item.id)
-              );
-            })
-            .catch((error) => {
-              console.error(`Failed to delete item with id ${item.id}:`, error);
-            });
-        }
+
+        // Removed status update and deletion logic
+
         return updatedItem;
       });
       return sortItemsByLifeTime(updatedItems);
     });
-  }, [calculateRemainingTime, processedItemIds]);
+  }, [calculateRemainingTime]);
 
   useEffect(() => {
     if (!searchTerm) {
@@ -224,12 +173,12 @@ const OrderMenuKhusus = () => {
         console.log(itemComplete);
         try {
           const response = await updateOrderSpecialItemStatus(itemComplete);
-          setMenuItems(
-            menuItems.map((item) =>
-              item.id === itemComplete ? { ...item, status: "finished" } : item
-            )
-          );
-          console.log(response);
+          setMenuItems(menuItems.filter((item) => item.id !== itemComplete));
+          await deleteOrderSpecialItem(itemComplete);
+          toast.success("Items successfuly updated", {
+            position: "top-right",
+            autoClose: 1000,
+          });
         } catch (error) {
           console.error("Failed to update item status:", error);
         } finally {
@@ -303,6 +252,7 @@ const OrderMenuKhusus = () => {
             {/* <th>Qty Porsi</th> */}
             <th>Qty</th>
             <th>UOM</th>
+            <th>Type</th>
             <th>Cooking Time</th>
             <th>Status</th>
             <th>Date</th>
@@ -331,6 +281,7 @@ const OrderMenuKhusus = () => {
               {/* <td>{item.qty_portion}</td> */}
               <td>{item.qty}</td>
               <td>{item.uom}</td>
+              <td>{item.item_type}</td>
               <td>
                 <p
                   className={getLifeTimeColor(
