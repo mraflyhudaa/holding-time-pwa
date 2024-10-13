@@ -4,6 +4,7 @@ import Table from "../component/Table";
 import { sumQtyItemHoldingTime } from "../services/holdingTimeService";
 import { getPDLCCalc } from "../services/pdlcService";
 import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const PDLC = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -18,7 +19,7 @@ const PDLC = () => {
 
   const itemsPerPage = 5;
   const timesPerPage = 4;
-  const qtyThreshold = 4;
+  const qtyThreshold = 5;
 
   const fetchItemsPdlc = async (search = "") => {
     setMsg(null);
@@ -32,9 +33,14 @@ const PDLC = () => {
       console.error("error", error);
       if (error.response.data.status == 404) {
         setMsg("PDLC data not calculated today, please click button below");
+        setIsError(true);
       }
+      toast.error("An error occurred while fetching data. Please try again.", {
+        position: "top-right",
+        autoClose: 5000,
+      });
+    } finally {
       setIsLoading(false);
-      setIsError(true);
     }
   };
 

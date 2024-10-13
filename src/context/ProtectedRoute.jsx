@@ -2,8 +2,11 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 import Navbar from "../component/Navbar";
+import { ToastContainer } from "react-toastify";
+import useAlertStream from "../utils/useAlertStream";
 
 const ProtectedRoute = ({ children }) => {
+  // useAlertStream();
   const { user } = useAuth();
   const location = useLocation();
   const getTitle = () => {
@@ -35,7 +38,12 @@ const ProtectedRoute = ({ children }) => {
     return <Navigate to="/login" />;
   }
 
-  return <Navbar title={getTitle()}>{children}</Navbar>;
+  return (
+    <>
+      <Navbar title={getTitle()}>{children}</Navbar>
+      <ToastContainer />
+    </>
+  );
 };
 
 export default ProtectedRoute;

@@ -1,8 +1,8 @@
 {
   "development": {
-    "baseURL": "http://172.18.123.14/api/public/index.php/api"
+    "baseURL": "http://localhost:8081/api"
   },
   "production": {
-    "baseURL": "http://172.18.123.14/api/public/index.php/api"
+    "baseURL": "http://172.20.59.66/api/public/index.php/api"
   }
 }

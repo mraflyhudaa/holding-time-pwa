@@ -133,13 +133,13 @@ const AddProductModal = ({ addProduct, isLoading }) => {
     if (product) {
       const baseQty = product.qty;
       const uom = product.uom;
-      if (uom === "pcs") {
-        setCalculatedQty(qty_portion); // No conversion needed for 'pcs'
+      if (uom === "pcs" || uom === "ptg") {
+        setCalculatedQty(qty_portion);
       } else {
-        setCalculatedQty(baseQty * qty_portion); // Calculate converted qty
+        setCalculatedQty(baseQty * qty_portion);
       }
     } else {
-      setCalculatedQty(""); // Clear the qty if product is not selected
+      setCalculatedQty("");
     }
   };
 

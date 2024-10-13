@@ -59,7 +59,7 @@ const pwaOptions = {
     clientsClaim: true,
   },
   injectManifest: {
-    additionalManifestEntries: [{ url: "/", revision: "v1.0.0" }],
+    additionalManifestEntries: [{ url: "/", revision: "v1.0.1" }],
   },
 };
 
@@ -72,8 +72,8 @@ if (process.env.SW === "true") {
   pwaOptions.srcDir = "src";
   pwaOptions.filename = claims ? "claims-sw.js" : "prompt-sw.js";
   pwaOptions.strategies = "injectManifest";
-  pwaOptions.manifest.name = "PWA Holding Time Manifest";
-  pwaOptions.manifest.short_name = "PWA Holding Time";
+  pwaOptions.manifest.name = "Hokben Holding Time Manifest";
+  pwaOptions.manifest.short_name = "Hokben Holding Time";
   pwaOptions.injectManifest = {
     minify: false,
     enableWorkboxModulesLogs: true,

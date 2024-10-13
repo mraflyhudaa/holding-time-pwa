@@ -39,6 +39,7 @@ const LoginPage = () => {
                 type="text"
                 placeholder="Enter your username"
                 className="input input-bordered bg-red-50 focus:border-red-500"
+                autoCapitalize="none"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 maxLength={10}
