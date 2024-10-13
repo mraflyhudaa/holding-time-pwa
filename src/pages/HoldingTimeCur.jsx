@@ -21,6 +21,7 @@ import { createWasteItem } from "../services/wasteService.js";
 import { getProductThresholds } from "../services/productConfigService.js";
 import ConfirmationModal from "../component/ConfirmationModal.jsx";
 import { formatTime } from "../utils/formatTime.js";
+import { toast } from "react-toastify";
 
 const HoldingTimeCur = () => {
   const [menuItems, setMenuItems] = useState([]);
@@ -199,6 +200,10 @@ const HoldingTimeCur = () => {
       setMenuItems((prevItems) =>
         prevItems.filter((item) => item.id !== itemDelete)
       );
+      toast.success("Items successfuly deleted", {
+        position: "top-right",
+        autoClose: 1000,
+      });
     } catch (error) {
       console.error("Error deleting product:", error);
     } finally {
@@ -292,7 +297,7 @@ const HoldingTimeCur = () => {
           <tr>
             <td>Item </td>
             <td>Display</td>
-            <td>Qty Porsi</td>
+            {/* <td>Qty Porsi</td> */}
             <td>Qty</td>
             <td>UOM</td>
             <td>Kelompok</td>
@@ -312,8 +317,8 @@ const HoldingTimeCur = () => {
             <tr key={item.id}>
               <td>{item.name}</td>
               <td>{item.display?.description}</td>
-              <td>{item.uom.trim() == "pcs" ? "-" : item.qty_portion}</td>
-              <td>{item.qty}</td>
+              {/* <td>{item.uom.trim() == "pcs" ? "-" : item.qty_portion}</td> */}
+              <td>{item.qty_portion}</td>
               <td>{item.uom}</td>
               <td>{item.kelompok}</td>
               <td>

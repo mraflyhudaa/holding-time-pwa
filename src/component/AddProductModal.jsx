@@ -128,18 +128,30 @@ const AddProductModal = ({ addProduct, isLoading }) => {
   };
 
   const calculateQty = () => {
-    const { noitem, qty_portion } = productData;
+    const { noitem, qty } = productData;
     const product = products.find((p) => p.noitem === noitem);
     if (product) {
       const baseQty = product.qty;
       const uom = product.uom;
       if (uom === "pcs" || uom === "ptg") {
-        setCalculatedQty(qty_portion);
+        setProductData((prevData) => ({
+          ...prevData,
+          qty: qty,
+          uom: uom,
+        }));
+      } else if (uom === "gr") {
+        setProductData((prevData) => ({
+          ...prevData,
+          qty: qty * baseQty,
+          uom: "porsi",
+        }));
       } else {
-        setCalculatedQty(baseQty * qty_portion);
+        setProductData((prevData) => ({
+          ...prevData,
+          qty: qty * baseQty,
+          uom: uom,
+        }));
       }
-    } else {
-      setCalculatedQty("");
     }
   };
 
@@ -150,7 +162,7 @@ const AddProductModal = ({ addProduct, isLoading }) => {
       addProduct({
         noitem: productData.noitem,
         name: productData.name,
-        qty_portion: productData.qty_portion,
+        qty_portion: productData.qty,
         uom: productData.uom,
         lifeTime: productData.lifeTime,
         display_id: display.id,
@@ -205,60 +217,24 @@ const AddProductModal = ({ addProduct, isLoading }) => {
             <div className="mb-4">
               <label
                 className="block mb-2 text-sm font-bold text-gray-700"
-                htmlFor="qty_portion"
+                htmlFor="qty"
               >
                 Quantity
               </label>
-              <div className="grid grid-cols-2 items-center space-x-4">
+              <div className="flex items-center space-x-4">
                 <input
-                  type="numbet"
+                  type="number"
                   inputMode="numeric"
-                  maxLength={2}
-                  id="qty_portion"
-                  name="qty_portion"
-                  value={productData.qty_portion}
+                  id="qty"
+                  name="qty"
+                  value={productData.qty}
                   onChange={handleInputChange}
-                  className="w-full max-w-full input input-bordered focus:input-secondary"
+                  className="w-2/3 input input-bordered focus:input-secondary"
                   required
                 />
-                <label className="block text-sm font-bold text-gray-700 text-left">
-                  Porsi
-                </label>
-              </div>
-            </div>
-            <div className="mb-4 flex flex-row justify-between">
-              <div>
-                <label
-                  className="block mb-2 text-sm font-bold text-gray-700"
-                  htmlFor="calculatedQty"
-                >
-                  Calculated Quantity
-                </label>
-                <input
-                  type="text"
-                  id="calculatedQty"
-                  name="calculatedQty"
-                  value={calculatedQty}
-                  className="w-full max-w-full input input-bordered focus:input-secondary"
-                  readOnly
-                />
-              </div>
-              <div>
-                <label
-                  className="block mb-2 text-sm font-bold text-gray-700"
-                  htmlFor="uom"
-                >
-                  UOM
-                </label>
-                <input
-                  type="text"
-                  id="uom"
-                  name="uom"
-                  value={productData.uom}
-                  onChange={handleInputChange}
-                  className="w-full max-w-full input input-bordered focus:input-secondary"
-                  readOnly
-                />
+                <span className="w-1/3 text-sm font-bold text-gray-700">
+                  {productData.uom}
+                </span>
               </div>
             </div>
             <div className="mb-4">
