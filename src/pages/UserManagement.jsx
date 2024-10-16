@@ -6,6 +6,7 @@ import {
   deleteUser,
 } from "../services/userManagementService.js";
 import { createUser } from "../services/userManagementService.js";
+import { useAuth } from "../context/AuthContext.jsx";
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -29,6 +30,9 @@ const UserManagement = () => {
   });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
+
+  const { user } = useAuth();
+
   const itemsPerPage = 5;
 
   const debouncedFetchUsers = useMemo(
@@ -47,6 +51,8 @@ const UserManagement = () => {
     []
   );
 
+  u;
+
   useEffect(() => {
     debouncedFetchUsers(searchTerm);
   }, [searchTerm, debouncedFetchUsers]);
@@ -55,14 +61,14 @@ const UserManagement = () => {
     setSearchTerm(e.target.value);
   };
 
-  const handleEditUser = (user) => {
+  const handleEditUser = (userData) => {
     setEditFormData({
-      id: user.id,
-      username: user.username,
-      namme: user.name,
+      id: userData.id,
+      username: userData.username,
+      namme: userData.name,
       password: "",
-      hhb: user.hhb,
-      role: user.role,
+      hhb: userData.hhb,
+      role: userData.role,
     });
     document.getElementById("edit_modal").showModal();
   };
@@ -93,7 +99,7 @@ const UserManagement = () => {
       username: "",
       name: "",
       password: "",
-      hhb: "",
+      hhb: user.hhb || "", // Set the HHB from the authenticated user
       role: "",
     });
     document.getElementById("add_modal").showModal();
@@ -128,7 +134,7 @@ const UserManagement = () => {
   const handleConfirmDelete = async () => {
     setIsLoading(true);
     try {
-      console.log(userToDelete.id);
+      // console.log(userToDelete.id);
       await deleteUser(userToDelete.id);
       setShowDeleteModal(false);
       debouncedFetchUsers(searchTerm);
@@ -392,6 +398,7 @@ const UserManagement = () => {
                 value={addFormData.hhb}
                 onChange={handleAddFormChange}
                 className="input input-bordered"
+                readOnly
               />
             </div>
             <div className="form-control">

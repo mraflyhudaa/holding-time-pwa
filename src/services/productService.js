@@ -6,7 +6,7 @@ export const getProducts = async (search) => {
     const response = await api.get(
       `products${search ? `?search=${search}` : ""}`
     );
-    // console.log(response.data);
+    // // console.log(response.data);
     return response.data;
   } catch (error) {
     if (error.response) {

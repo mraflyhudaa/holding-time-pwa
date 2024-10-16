@@ -49,7 +49,7 @@ export const getRMLCCalc = async (search) => {
     );
     return response.data;
   } catch (error) {
-    // console.log(error);
+    // // console.log(error);
     if (error.response) {
       console.error("Server Error:", error.response.data);
     } else if (error.request) {

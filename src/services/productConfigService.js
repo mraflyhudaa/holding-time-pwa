@@ -76,7 +76,7 @@ export const getDataPLU = async () => {
   const api = await initializeAxios();
   try {
     const response = await api.get("product-thresholds/get-products-order");
-    console.log(response);
+    // console.log(response);
     return response;
   } catch (error) {
     if (error.response) {

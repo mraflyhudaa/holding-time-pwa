@@ -70,7 +70,7 @@ const MasterDisplay = () => {
     setIsLoading(true);
     try {
       await updateMasterDisplay(editFormData.id, editFormData);
-      console.log(editFormData);
+      // console.log(editFormData);
       document.getElementById("edit_modal").close();
       debouncedFetchMasterData(searchTerm);
     } catch (error) {

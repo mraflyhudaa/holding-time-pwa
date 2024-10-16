@@ -59,7 +59,7 @@ const pwaOptions = {
     clientsClaim: true,
   },
   injectManifest: {
-    additionalManifestEntries: [{ url: "/", revision: "v1.0.1" }],
+    additionalManifestEntries: [{ url: "/", revision: "v1.0.3" }],
   },
 };
 
@@ -87,10 +87,10 @@ if (reload) {
 }
 
 if (selfDestroying) pwaOptions.selfDestroying = selfDestroying;
-console.log(pwaOptions);
+// console.log(pwaOptions);
 
 export default defineConfig({
-  // base: process.env.BASE_URL || 'https://github.com/',
+  base: process.env.BASE_URL || "/",
   build: {
     sourcemap: process.env.SOURCE_MAP === "true",
     minify: true,
@@ -102,6 +102,6 @@ export default defineConfig({
       values: replaceOptions,
       preventAssignment: true,
     }),
-    compression({ exclude: /config\.json$/ }),
+    compression({ exclude: [/config\.json$/, /\.htaccess$/] }),
   ],
 });

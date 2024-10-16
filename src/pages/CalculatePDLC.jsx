@@ -45,7 +45,7 @@ const CalculatePDLC = () => {
           hourTo,
           setProgress
         );
-        console.log(data);
+        // console.log(data);
         setResult(
           `Calculate PDLC from ${dateFrom} ${hourFrom}:00 to ${dateTo} ${hourTo}:00 success`
         );

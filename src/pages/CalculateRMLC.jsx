@@ -46,7 +46,7 @@ const CalculateRMLC = () => {
           hourTo,
           setProgress
         );
-        console.log(data);
+        // console.log(data);
         // setResult(`The difference is ${data.diffInDays} days.`);
         setResult(
           `Calculate RMLC from ${dateFrom} ${hourFrom}:00 to ${dateTo} ${hourTo}:00 success`

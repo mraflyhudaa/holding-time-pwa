@@ -30,6 +30,7 @@ const HoldingTimeCur = () => {
   const [blinkStates, setBlinkStates] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
   const [productConfigs, setProductConfigs] = useState([]);
   const [itemDelete, setItemDelete] = useState(null);
   const itemsPerPage = 5;
@@ -64,6 +65,9 @@ const HoldingTimeCur = () => {
 
   const fetchMenuItems = useCallback(
     async (search = "") => {
+      if (isFetching) return;
+      setIsFetching(true);
+
       try {
         const response = await getHoldingTime(search);
         const currentTime = new Date().getTime();
@@ -78,6 +82,8 @@ const HoldingTimeCur = () => {
         setMenuItems(sortItemsByLifeTime(calculatedItems));
       } catch (error) {
         console.error("Error fetching menu items:", error);
+      } finally {
+        setIsFetching(false);
       }
     },
     [calculateRemainingTime]
@@ -91,7 +97,7 @@ const HoldingTimeCur = () => {
   const insertWasteItem = useCallback(async (item) => {
     try {
       const response = await createWasteItem(item);
-      // console.log("Waste item inserted:", response);
+      // // console.log("Waste item inserted:", response);
     } catch (error) {
       console.error("Error inserting waste item:", error);
     }
@@ -109,7 +115,7 @@ const HoldingTimeCur = () => {
         ) {
           updateStatusHoldingTime(item)
             .then((response) => {
-              console.log("Marked as expired:", response);
+              // console.log("Marked as expired:", response);
             })
             .catch((error) => {
               console.error("Error marking as expired:", error);
@@ -131,7 +137,7 @@ const HoldingTimeCur = () => {
       if (!searchTerm) {
         fetchMenuItems();
       }
-    }, 3000); // Poll every 5 seconds
+    }, 2000); // Poll every 5 seconds
 
     const timerInterval = setInterval(() => {
       updateLifeTimes();
@@ -187,14 +193,14 @@ const HoldingTimeCur = () => {
   );
 
   const handleDeleteModal = (id) => {
-    // console.log("Deleting item:", id);
+    // // console.log("Deleting item:", id);
     setItemDelete(id);
     document.getElementById("confirmation_modal").showModal();
   };
 
   const handleDelete = useCallback(async () => {
     setIsDeleting(true);
-    // console.log("Deleting item:", itemDelete);
+    // // console.log("Deleting item:", itemDelete);
     try {
       await deleteItemHoldingTime(itemDelete);
       setMenuItems((prevItems) =>
@@ -240,7 +246,7 @@ const HoldingTimeCur = () => {
         className = "text-lg badge badge-lg badge-info";
       }
 
-      // console.log("Life Time Color Class:", className);
+      // // console.log("Life Time Color Class:", className);
       return className;
     },
     [blinkStates, productConfigs]
@@ -333,16 +339,14 @@ const HoldingTimeCur = () => {
                 </p>
               </td>
               <td>
-                {item.lifeTime == "00:00:00" && (
+                {(item.lifeTime == "00:00:00" || item.qty_portion == 0) && (
                   <button
                     className="btn btn-error text-lg"
                     // onClick={() => handleDelete(item.id)}
                     onClick={() => handleDeleteModal(item.id)}
                     disabled={isDeleting}
                   >
-                    {item.qty != 0 || item.qty_portion != 0
-                      ? "Waste"
-                      : "Delete"}
+                    {item.qty_portion != 0 ? "Waste" : "Delete"}
                   </button>
                 )}
               </td>

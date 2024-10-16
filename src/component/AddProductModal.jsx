@@ -157,7 +157,7 @@ const AddProductModal = ({ addProduct, isLoading }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(productData);
+    // console.log(productData);
     try {
       addProduct({
         noitem: productData.noitem,

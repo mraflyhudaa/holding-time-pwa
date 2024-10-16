@@ -17,6 +17,7 @@ const OrderMenuKhusus = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
   const [sortDirection, setSortDirection] = useState("asc");
   const [itemComplete, setItemComplete] = useState(null);
   const [productConfigs, setProductConfigs] = useState({});
@@ -31,7 +32,7 @@ const OrderMenuKhusus = () => {
     try {
       const configs = await getSpecialProductThresholds();
       setProductConfigs(configs);
-      console.log("Product Configs:", configs);
+      // console.log("Product Configs:", configs);
     } catch (error) {
       console.error("Error fetching product configs:", error);
     }
@@ -56,10 +57,12 @@ const OrderMenuKhusus = () => {
 
   const fetchItems = useCallback(
     async (search = "") => {
+      if (isFetching) return;
+      setIsFetching(true);
+
       try {
         const response = await getOrderSpecialItems(search);
         const currentTime = new Date().getTime();
-        console.log(response);
         const items = response.data.map((item) => ({
           ...item,
           initialLifeTime: item.cooking_time,
@@ -71,9 +74,11 @@ const OrderMenuKhusus = () => {
         setMenuItems(sortItemsByLifeTime(calculatedItems));
       } catch (error) {
         console.error("Error fetching menu items:", error);
+      } finally {
+        setIsFetching(false);
       }
     },
-    [calculateRemainingTime]
+    [calculateRemainingTime, isLoading]
   );
 
   const debouncedFetchMenuItems = useMemo(
@@ -107,7 +112,7 @@ const OrderMenuKhusus = () => {
       if (!searchTerm) {
         fetchItems();
       }
-    }, 5000);
+    }, 2000);
 
     const timerInterval = setInterval(() => {
       updateLifeTimes();
@@ -161,8 +166,8 @@ const OrderMenuKhusus = () => {
 
   const handleCompleteModal = (id) => {
     setItemComplete(id);
-    console.log(id);
-    console.log(itemComplete);
+    // console.log(id);
+    // console.log(itemComplete);
     document.getElementById("confirmation_modal").showModal();
   };
 
@@ -170,7 +175,7 @@ const OrderMenuKhusus = () => {
     async (event) => {
       event.preventDefault(); // Prevent form submission
       if (itemComplete) {
-        console.log(itemComplete);
+        // console.log(itemComplete);
         try {
           const response = await updateOrderSpecialItemStatus(itemComplete);
           setMenuItems(menuItems.filter((item) => item.id !== itemComplete));
@@ -217,7 +222,7 @@ const OrderMenuKhusus = () => {
         className = "text-lg badge badge-lg ";
       }
 
-      // console.log("Life Time Color Class:", className);
+      // // console.log("Life Time Color Class:", className);
       return className;
     },
     [blinkStates, productConfigs]

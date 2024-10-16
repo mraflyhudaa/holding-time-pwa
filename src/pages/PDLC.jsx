@@ -63,7 +63,7 @@ const PDLC = () => {
       const quantities = await sumQtyItemHoldingTime();
       const lowItems = {};
       quantities.data.forEach((item) => {
-        // console.log(item);
+        // // console.log(item);
         if (item.total_qty < qtyThreshold) {
           lowItems[item.noitem] = true;
         }
